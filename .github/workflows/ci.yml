@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: sticker_track_test
+          POSTGRES_USER: sticker_track
+          POSTGRES_PASSWORD: sticker_track
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sticker_track -d sticker_track_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      DATABASE_URL: postgresql://sticker_track:sticker_track@127.0.0.1:5432/sticker_track_test?schema=public
+      JWT_SECRET: ci-only-secret-that-is-long-enough-for-tests
+      APP_URL: http://localhost:3000
+      CORS_ALLOWED_ORIGINS: http://localhost:3000
+      NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.10.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm deploy:migrate
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm translations:validate
+      - run: pnpm build
+      - run: pnpm --filter @sticker-track/database exec prisma validate

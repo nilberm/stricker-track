@@ -1,0 +1,53 @@
+{
+  "name": "@sticker-track/database",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "deploy:migrate": "tsx scripts/deploy-migrate.ts",
+    "db:migration:create": "prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script --output prisma/migrations/0001_initial/migration.sql",
+    "db:seed": "prisma db seed",
+    "seed:development": "tsx prisma/seed.ts && tsx prisma/seed-demo.ts",
+    "seed:test": "tsx prisma/seed.ts && tsx prisma/seed-demo.ts",
+    "seed:production": "tsx prisma/seed.ts",
+    "admin:promote": "tsx scripts/promote-admin.ts",
+    "db:validate": "prisma validate",
+    "import:stickers": "tsx scripts/import-stickers.ts",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.9.0",
+    "@sticker-track/shared": "workspace:*",
+    "argon2": "^0.43.0",
+    "axios": "^1.18.0",
+    "cheerio": "^1.2.0",
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.8.0",
+    "prisma": "^6.9.0",
+    "tsx": "^4.19.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "puppeteer": "^25.1.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "typescript": "^5.8.3"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  }
+}

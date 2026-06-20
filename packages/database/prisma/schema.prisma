@@ -1,0 +1,386 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum SupportedLocale {
+  PT_BR
+  EN
+  ES
+}
+
+enum StickerType {
+  PLAYER
+  TEAM
+  BADGE
+  STADIUM
+  TROPHY
+  MASCOT
+  SPECIAL
+  OTHER
+}
+
+enum CollectionStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  ARCHIVED
+}
+
+enum SectionType {
+  NATIONAL_TEAM
+  INTRODUCTION
+  STADIUMS
+  SPECIAL
+  OTHER
+}
+
+enum ImageProvider {
+  WIKIMEDIA_COMMONS
+  WIKIDATA
+  THE_SPORTS_DB
+  OTHER
+}
+
+enum EnrichmentProvider {
+  WIKIDATA
+  MOCK
+  MANUAL
+}
+
+enum EnrichmentStatus {
+  NOT_STARTED
+  CANDIDATES_FOUND
+  REVIEW_REQUIRED
+  APPROVED
+  FAILED
+}
+
+enum ImageReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum CatalogImportStatus {
+  COMPLETED
+  FAILED
+}
+
+enum ScanStatus {
+  MATCHED
+  NOT_FOUND
+  INVALID
+  CONFIRMATION_REQUIRED
+  CONFIRMED
+}
+
+enum ScanSource {
+  MANUAL
+  CAMERA
+}
+
+model User {
+  id              String           @id @default(uuid()) @db.Uuid
+  name            String
+  email           String           @unique
+  passwordHash    String
+  role            UserRole         @default(USER)
+  preferredLocale SupportedLocale  @default(PT_BR)
+  userCollections UserCollection[]
+  scans           StickerScan[]
+  approvedPlayers Player[]         @relation("PlayerApprovedBy")
+  reviewedImages  PlayerImage[]    @relation("PlayerImageReviewedBy")
+  catalogImports  CatalogImport[]
+  passwordResetTokens PasswordResetToken[]
+  emailVerificationTokens EmailVerificationToken[]
+  emailVerifiedAt DateTime?
+  deletedAt       DateTime?
+  tokenVersion    Int              @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([deletedAt])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model EmailVerificationToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId, expiresAt])
+}
+
+model Collection {
+  id                  String                  @id @default(uuid()) @db.Uuid
+  slug                String                  @unique
+  releaseYear         Int?
+  publisherName       String?
+  totalStickers       Int
+  status              CollectionStatus        @default(DRAFT)
+  codePattern         String?
+  codeExample         String?
+  codePrefixMinLength Int?
+  codePrefixMaxLength Int?
+  codeNumberMinLength Int?
+  codeNumberMaxLength Int?
+  translations        CollectionTranslation[]
+  sections            CollectionSection[]
+  stickers            Sticker[]
+  userCollections     UserCollection[]
+  scans               StickerScan[]
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+}
+
+model CollectionTranslation {
+  id           String          @id @default(uuid()) @db.Uuid
+  collectionId String          @db.Uuid
+  locale       SupportedLocale
+  name         String
+  description  String?
+  collection   Collection      @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@unique([collectionId, locale])
+}
+
+model CollectionSection {
+  id           String                         @id @default(uuid()) @db.Uuid
+  collectionId String                         @db.Uuid
+  code         String
+  type         SectionType                    @default(OTHER)
+  countryIso2  String?                        @db.VarChar(2)
+  order        Int
+  collection   Collection                     @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  translations CollectionSectionTranslation[]
+  stickers     Sticker[]
+  createdAt    DateTime                       @default(now())
+  updatedAt    DateTime                       @updatedAt
+
+  @@unique([collectionId, order])
+  @@unique([collectionId, code])
+}
+
+model CollectionSectionTranslation {
+  id        String            @id @default(uuid()) @db.Uuid
+  sectionId String            @db.Uuid
+  locale    SupportedLocale
+  name      String
+  section   CollectionSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  @@unique([sectionId, locale])
+}
+
+model Sticker {
+  id             String             @id @default(uuid()) @db.Uuid
+  collectionId   String             @db.Uuid
+  sectionId      String?            @db.Uuid
+  playerId       String?            @db.Uuid
+  code           String
+  normalizedCode String
+  prefix         String?
+  number         Int?
+  name           String
+  type           StickerType
+  albumOrder     Int
+  sectionOrder   Int
+  collection     Collection         @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  section        CollectionSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  player         Player?            @relation(fields: [playerId], references: [id], onDelete: SetNull)
+  translations   StickerTranslation[]
+  userStickers   UserSticker[]
+  scans          StickerScan[]
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  @@unique([collectionId, normalizedCode])
+  @@unique([collectionId, albumOrder])
+  @@unique([sectionId, sectionOrder])
+  @@index([sectionId])
+  @@index([playerId])
+}
+
+model StickerTranslation {
+  id        String          @id @default(uuid()) @db.Uuid
+  stickerId String          @db.Uuid
+  locale    SupportedLocale
+  name      String
+  sticker   Sticker         @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+
+  @@unique([stickerId, locale])
+}
+
+model Player {
+  id                    String             @id @default(uuid()) @db.Uuid
+  name                  String
+  normalizedName        String?
+  displayName           String?
+  countryCode           String?
+  countryName           String?
+  nationality           String?
+  position              String?
+  birthDate             DateTime?          @db.Date
+  wikidataId            String?            @unique
+  sportsDbId            String?            @unique
+  enrichmentStatus      EnrichmentStatus   @default(NOT_STARTED)
+  enrichmentProvider    EnrichmentProvider?
+  lastProviderQueryAt   DateTime?
+  lastEnrichedAt        DateTime?
+  enrichmentApprovedAt DateTime?
+  enrichmentApprovedBy String?             @db.Uuid
+  enrichmentError       String?
+  approvedBy            User?              @relation("PlayerApprovedBy", fields: [enrichmentApprovedBy], references: [id], onDelete: SetNull)
+  images                PlayerImage[]
+  stickers              Sticker[]
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  @@index([normalizedName, countryCode])
+  @@index([enrichmentStatus])
+}
+
+model PlayerImage {
+  id          String            @id @default(uuid()) @db.Uuid
+  playerId    String            @db.Uuid
+  url         String
+  sourceUrl   String
+  author      String?
+  license     String?
+  licenseUrl  String?
+  provider    ImageProvider
+  reviewStatus ImageReviewStatus @default(PENDING)
+  reviewNote  String?
+  fetchedAt   DateTime          @default(now())
+  reviewedAt  DateTime?
+  reviewedById String?          @db.Uuid
+  isPrimary   Boolean           @default(false)
+  player      Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  reviewedBy  User?             @relation("PlayerImageReviewedBy", fields: [reviewedById], references: [id], onDelete: SetNull)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([playerId, isPrimary])
+  @@index([playerId, reviewStatus])
+}
+
+model CatalogImport {
+  id          String              @id @default(uuid()) @db.Uuid
+  fileName    String
+  contentHash String
+  status      CatalogImportStatus
+  report      Json
+  error       String?
+  createdById String              @db.Uuid
+  createdBy   User                @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime            @default(now())
+  completedAt DateTime?
+
+  @@index([createdAt(sort: Desc)])
+  @@index([contentHash])
+}
+
+model ProviderCache {
+  id             String             @id @default(uuid()) @db.Uuid
+  provider       EnrichmentProvider
+  cacheKey       String
+  payload        Json
+  lastRequestedAt DateTime           @default(now())
+  expiresAt      DateTime
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([provider, cacheKey])
+  @@index([expiresAt])
+}
+
+model UserCollection {
+  id           String        @id @default(uuid()) @db.Uuid
+  userId       String        @db.Uuid
+  collectionId String        @db.Uuid
+  startedAt    DateTime      @default(now())
+  completedAt  DateTime?
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection   Collection    @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  userStickers UserSticker[]
+  scans        StickerScan[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@unique([userId, collectionId])
+  @@index([collectionId])
+  @@index([userId, updatedAt(sort: Desc)])
+}
+
+model UserSticker {
+  id               String         @id @default(uuid()) @db.Uuid
+  userCollectionId String         @db.Uuid
+  stickerId        String         @db.Uuid
+  quantity         Int            @default(0)
+  firstAcquiredAt  DateTime?
+  lastAcquiredAt   DateTime?
+  userCollection   UserCollection @relation(fields: [userCollectionId], references: [id], onDelete: Cascade)
+  sticker          Sticker        @relation(fields: [stickerId], references: [id], onDelete: Cascade)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([userCollectionId, stickerId])
+  @@index([stickerId])
+  @@index([userCollectionId, updatedAt(sort: Desc)])
+  @@index([userCollectionId, quantity])
+}
+
+model StickerScan {
+  id                String         @id @default(uuid()) @db.Uuid
+  userId            String         @db.Uuid
+  collectionId      String         @db.Uuid
+  userCollectionId  String         @db.Uuid
+  source            ScanSource     @default(MANUAL)
+  rawText           String
+  ocrRawText        String?
+  detectedCode      String?
+  normalizedCode    String?
+  selectedCandidate String?
+  corrections       String[]       @default([])
+  stickerId         String?        @db.Uuid
+  confidence        Float?
+  status            ScanStatus
+  confirmedAt       DateTime?
+  user              User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  collection        Collection     @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  userCollection    UserCollection @relation(fields: [userCollectionId], references: [id], onDelete: Cascade)
+  sticker           Sticker?       @relation(fields: [stickerId], references: [id], onDelete: SetNull)
+  createdAt         DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userCollectionId, createdAt])
+  @@index([collectionId, normalizedCode])
+}

@@ -1,0 +1,7 @@
+CREATE TYPE "ScanSource" AS ENUM ('MANUAL', 'CAMERA');
+
+ALTER TABLE "StickerScan"
+ADD COLUMN "source" "ScanSource" NOT NULL DEFAULT 'MANUAL',
+ADD COLUMN "ocrRawText" TEXT,
+ADD COLUMN "selectedCandidate" TEXT,
+ADD COLUMN "corrections" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

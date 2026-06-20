@@ -1,0 +1,36 @@
+{
+  "name": "sticker-track",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "build": "turbo build",
+    "dev": "node scripts/dev.mjs",
+    "dev:apps": "turbo dev",
+    "dev:down": "docker compose down",
+    "dev:setup": "node scripts/dev.mjs --setup-only",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "turbo lint",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "db:generate": "pnpm --filter @sticker-track/database db:generate",
+    "db:migrate": "pnpm --filter @sticker-track/database db:migrate",
+    "db:migrate:deploy": "pnpm --filter @sticker-track/database db:migrate:deploy",
+    "deploy:migrate": "pnpm --filter @sticker-track/database deploy:migrate",
+    "db:seed": "pnpm --filter @sticker-track/database db:seed",
+    "seed:development": "pnpm --filter @sticker-track/database seed:development",
+    "seed:test": "pnpm --filter @sticker-track/database seed:test",
+    "seed:production": "pnpm --filter @sticker-track/database seed:production",
+    "admin:promote": "pnpm --filter @sticker-track/database admin:promote",
+    "import:stickers": "pnpm --filter @sticker-track/database import:stickers",
+    "translations:validate": "pnpm --filter @sticker-track/web messages:check",
+    "postinstall": "pnpm db:generate && pnpm --filter @sticker-track/shared build && pnpm --filter @sticker-track/database build"
+  },
+  "devDependencies": {
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
+    "turbo": "^2.5.4",
+    "typescript": "^5.8.3"
+  }
+}
