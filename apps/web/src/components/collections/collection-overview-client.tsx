@@ -8,6 +8,12 @@ import type { Locale } from '../../i18n/config';
 import { usePersonalCollection, usePersonalCollectionProgress } from '../../hooks/use-personal-collection';
 import { CollectorSidebar } from './collector-sidebar';
 
+function getFlagUrl(sectionCode: string, iso2: string | null) {
+  if (sectionCode === 'ENG') return '/flags/england.png';
+  if (sectionCode === 'SCO') return '/flags/scotland.png';
+  return `https://flagcdn.com/w160/${(iso2 || sectionCode.substring(0, 2)).toLowerCase()}.png`;
+}
+
 export function CollectionOverviewClient({ userCollectionId }: { userCollectionId: string }) {
   const locale = useLocale() as Locale;
   const t = useTranslations();
@@ -28,6 +34,11 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
   }
 
   const sections = progress.data?.sections || [];
+  const totalStickers = progress.data?.totalStickers || 0;
+  const collectedStickers = progress.data?.ownedUnique || 0;
+  const duplicateStickers = progress.data?.duplicates || 0;
+  const missingStickers = progress.data?.missing || 0;
+  const globalPercentage = progress.data?.completionPercentage || 0;
   
   const specialSections = sections.filter((s) => s.type !== 'NATIONAL_TEAM');
   const nationalTeams = sections.filter((s) => s.type === 'NATIONAL_TEAM');
@@ -65,6 +76,38 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
           </p>
         )}
       </header>
+
+      {progress.data && (
+        <div className="mb-8 block lg:hidden overflow-hidden rounded-3xl border border-white/10 bg-[#121216]/95 shadow-xl">
+          <div className="p-5">
+            <div className="flex items-end justify-between gap-3 mb-2">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Progresso global</p>
+                <p className="mt-1 text-3xl font-black text-amber-500">{globalPercentage}%</p>
+              </div>
+              <p className="pb-1 text-sm font-semibold text-zinc-400">{collectedStickers}/{totalStickers}</p>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-500" style={{ width: `${Math.min(globalPercentage, 100)}%` }} />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-3 divide-x divide-white/5 border-t border-white/5 bg-white/[0.02]">
+            <div className="flex flex-col items-center justify-center p-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Coladas</span>
+              <span className="mt-1 text-base font-bold text-emerald-400">{collectedStickers}</span>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Faltam</span>
+              <span className="mt-1 text-base font-bold text-pink-500">{missingStickers}</span>
+            </div>
+            <div className="flex flex-col items-center justify-center p-3">
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Repetidas</span>
+              <span className="mt-1 text-base font-bold text-violet-400">{duplicateStickers}</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mb-10 flex flex-col gap-4 max-w-xl mx-auto lg:max-w-none lg:mx-0">
         {/* Row 1: Instant Filter */}
@@ -205,7 +248,7 @@ function CompactSectionCard({ section, userCollectionId }: { section: any; userC
       <div className="flex w-10 sm:w-12 shrink-0 items-center justify-center h-full border-r border-zinc-800/50 bg-zinc-900 p-1">
         {isNationalTeam ? (
           <img 
-            src={`https://flagcdn.com/w160/${(section.countryIso2 || section.code.substring(0, 2)).toLowerCase()}.png`} 
+            src={getFlagUrl(section.code, section.countryIso2)} 
             className="h-full w-full object-contain" 
             alt={section.name} 
             onError={(e) => { e.currentTarget.style.display = 'none'; }} 

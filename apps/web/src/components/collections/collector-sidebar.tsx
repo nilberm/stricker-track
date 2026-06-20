@@ -48,6 +48,7 @@ export function CollectorSidebar({
   return (
     <aside
       className={`
+        hidden lg:block
         fixed left-0 top-24 z-40
         transition-all duration-300 ease-in-out
         ${isExpanded ? "w-[310px]" : "w-[76px]"}

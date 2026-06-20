@@ -18,7 +18,14 @@ export function NationalTeamCard({
   userCollectionId: string;
 }) {
   const t = useTranslations('myCollections');
-  const flag = section.countryIso2 ? getFlagEmoji(section.countryIso2) : null;
+  let flagNode: React.ReactNode = null;
+  if (section.code === 'ENG') {
+    flagNode = <img src="/flags/england.png" alt="England Flag" className="h-6 w-8 object-cover rounded-[2px] shadow-sm" />;
+  } else if (section.code === 'SCO') {
+    flagNode = <img src="/flags/scotland.png" alt="Scotland Flag" className="h-6 w-8 object-cover rounded-[2px] shadow-sm" />;
+  } else if (section.countryIso2) {
+    flagNode = getFlagEmoji(section.countryIso2);
+  }
 
   return (
     <Link
@@ -28,7 +35,7 @@ export function NationalTeamCard({
     >
       <div className="flex items-center gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-zinc-700 bg-zinc-950/50 text-2xl shadow-inner">
-          {flag ?? <span className="text-sm font-bold text-amber-500">{section.code}</span>}
+          {flagNode ?? <span className="text-sm font-bold text-amber-500">{section.code}</span>}
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-lg font-black text-zinc-100 drop-shadow-md transition-colors group-hover:text-amber-400">

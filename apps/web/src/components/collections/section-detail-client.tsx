@@ -108,6 +108,12 @@ const stickerTypesOrder = [
   'OTHER',
 ];
 
+function getFlagUrl(sectionCode: string, iso2: string | null, width: 40 | 160 = 160) {
+  if (sectionCode === 'ENG') return '/flags/england.png';
+  if (sectionCode === 'SCO') return '/flags/scotland.png';
+  return `https://flagcdn.com/w${width}/${(iso2 || sectionCode.substring(0, 2)).toLowerCase()}.png`;
+}
+
 export function SectionDetailClient({
   userCollectionId,
   sectionId,
@@ -321,7 +327,7 @@ export function SectionDetailClient({
                           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors group"
                         >
                           <img 
-                            src={`https://flagcdn.com/w40/${(s.countryIso2 || s.code.substring(0, 2))?.toLowerCase()}.png`} 
+                            src={getFlagUrl(s.code, s.countryIso2, 40)} 
                             className="w-6 h-auto rounded-sm opacity-80 group-hover:opacity-100" 
                             alt={s.code}
                             onError={(e) => e.currentTarget.style.display = 'none'}
@@ -369,27 +375,37 @@ export function SectionDetailClient({
               {/* LEFT PAGE */}
               <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
                 {isNationalTeam && (
-                  <div className="col-span-2 flex aspect-[3/2] flex-col justify-center overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900/50 p-4 shadow-inner lg:p-6">
-                    <span className="text-xl font-black text-zinc-600 sm:text-2xl lg:text-3xl leading-none">WE ARE</span>
-                    <span className="text-3xl font-black uppercase tracking-tighter text-amber-500 drop-shadow-md sm:text-4xl lg:text-5xl">
-                      {section?.name}
-                    </span>
-                    <div className="mt-4 flex items-center gap-3">
+                  <div className="col-span-2 flex aspect-[3/2] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900/50 p-3 sm:p-4 shadow-inner lg:p-5">
+                    <div>
+                      <span className="block text-lg font-black text-zinc-600 sm:text-xl lg:text-2xl leading-none">WE ARE</span>
+                      <span 
+                        className={`block font-black uppercase tracking-tighter text-amber-500 drop-shadow-md leading-none mt-1 ${
+                          (section?.name?.length || 0) > 14 
+                            ? 'text-lg sm:text-xl lg:text-2xl' 
+                            : (section?.name?.length || 0) >= 8 
+                              ? 'text-xl sm:text-2xl lg:text-3xl' 
+                              : 'text-2xl sm:text-3xl lg:text-4xl'
+                        }`}
+                      >
+                        {section?.name}
+                      </span>
+                    </div>
+                    <div className="mt-2 sm:mt-auto flex items-center gap-2 sm:gap-3">
                       { (section?.countryIso2 || section?.code) && (
                         <img
-                          src={`https://flagsapi.com/${(section?.countryIso2 || section?.code?.substring(0, 2))?.toUpperCase()}/flat/64.png`}
+                          src={section?.code === 'ENG' ? '/flags/england.png' : section?.code === 'SCO' ? '/flags/scotland.png' : `https://flagsapi.com/${(section?.countryIso2 || section?.code?.substring(0, 2))?.toUpperCase()}/flat/64.png`}
                           alt={section.name}
-                          className="h-8 w-12 rounded object-cover drop-shadow-md sm:h-10 sm:w-16 lg:h-12 lg:w-20"
+                          className="h-6 w-10 shrink-0 rounded object-cover drop-shadow-md sm:h-8 sm:w-12 lg:h-10 lg:w-14"
                           onError={(e) => {
                             if (e.currentTarget.src.includes('flagsapi.com')) {
-                              e.currentTarget.src = `https://flagcdn.com/w160/${(section?.countryIso2 || section?.code?.substring(0, 2))?.toLowerCase()}.png`;
+                              e.currentTarget.src = getFlagUrl(section?.code || '', section?.countryIso2 || null, 160);
                             } else {
                               e.currentTarget.style.display = 'none';
                             }
                           }}
                         />
                       )}
-                      <span className="text-xs font-bold uppercase tracking-widest text-zinc-300 sm:text-sm lg:text-base">
+                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 sm:text-xs lg:text-sm leading-tight line-clamp-2">
                         {FEDERATION_NAMES[section?.code || ''] || "National Football Association"}
                       </span>
                     </div>
@@ -426,7 +442,7 @@ export function SectionDetailClient({
                               {/* Right part (Flag) */}
                               <div className="flex-1 bg-zinc-900 flex">
                                 <img
-                                  src={`https://flagcdn.com/w160/${(team.countryIso2 || team.code.substring(0, 2)).toLowerCase()}.png`}
+                                  src={getFlagUrl(team.code, team.countryIso2, 160)}
                                   alt={team.name}
                                   className="w-full h-auto block object-cover opacity-90"
                                   onError={(e) => {
