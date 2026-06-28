@@ -737,36 +737,34 @@ export class UserCollectionsService {
     
     let importedCount = 0;
     
-    await this.prisma.$transaction(async (tx) => {
-      const now = new Date();
-      for (const update of updates) {
-        const stickerId = codeToId.get(update.normalizedCode);
-        if (!stickerId) continue;
-        
-        importedCount++;
-        
-        if (update.quantity === 0) {
-          await tx.userSticker.deleteMany({
-            where: { userCollectionId, stickerId },
-          });
-        } else {
-          await tx.userSticker.upsert({
-            where: { userCollectionId_stickerId: { userCollectionId, stickerId } },
-            create: {
-              userCollectionId,
-              stickerId,
-              quantity: update.quantity,
-              firstAcquiredAt: now,
-              lastAcquiredAt: now,
-            },
-            update: {
-              quantity: update.quantity,
-              lastAcquiredAt: now,
-            }
-          });
-        }
+    const now = new Date();
+    for (const update of updates) {
+      const stickerId = codeToId.get(update.normalizedCode);
+      if (!stickerId) continue;
+      
+      importedCount++;
+      
+      if (update.quantity === 0) {
+        await this.prisma.userSticker.deleteMany({
+          where: { userCollectionId, stickerId },
+        });
+      } else {
+        await this.prisma.userSticker.upsert({
+          where: { userCollectionId_stickerId: { userCollectionId, stickerId } },
+          create: {
+            userCollectionId,
+            stickerId,
+            quantity: update.quantity,
+            firstAcquiredAt: now,
+            lastAcquiredAt: now,
+          },
+          update: {
+            quantity: update.quantity,
+            lastAcquiredAt: now,
+          }
+        });
       }
-    });
+    }
 
     return { imported: importedCount, totalLines: lines.length };
   }
