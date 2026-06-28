@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: sticker-track-api
+    env: node
+    rootDir: .
+    buildCommand: npm install -g pnpm@10.10.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @sticker-track/api build
+    startCommand: pnpm deploy:migrate && pnpm --filter @sticker-track/api start
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: PNPM_VERSION
+        value: "10.10.0"
+      - key: API_PORT
+        value: "10000"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: APP_URL
+        sync: false

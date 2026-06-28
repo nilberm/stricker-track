@@ -1,0 +1,15 @@
+[build]
+  # We use the pnpm filter to build only the web app and its dependencies
+  command = "pnpm --filter @sticker-track/web build"
+  # Next.js export directory relative to root
+  publish = "apps/web/.next"
+
+[build.environment]
+  # Tell Netlify to use a specific Node.js and pnpm version
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--frozen-lockfile"
+  # Set CI=true so Next.js warnings don't fail the build unnecessarily
+  CI = "true"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
