@@ -1,4 +1,4 @@
-import { authenticatedApiRequest } from './api';
+import { authenticatedApiRequest, apiRequest } from './api';
 import type { StickerCodeConfig } from '@sticker-track/shared';
 
 export type CollectionProgress = {
@@ -14,12 +14,28 @@ export type UserCollectionSummary = {
   id: string;
   startedAt: string;
   updatedAt: string;
+  isPublic: boolean;
   collection: {
     id: string;
     slug: string;
     name: string;
     totalStickers: number;
     releaseYear: number | null;
+  };
+  progress: CollectionProgress;
+};
+
+export type PublicCollectionSummary = {
+  id: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+  };
+  collection: {
+    id: string;
+    name: string;
+    totalStickers: number;
   };
   progress: CollectionProgress;
 };
@@ -69,6 +85,7 @@ export type PersonalSticker = {
   quantity: number;
   owned: boolean;
   duplicateCount: number;
+  tradeWeight: number;
   section: { id: string; name: string } | null;
   player: {
     id: string;
@@ -204,6 +221,21 @@ export function getUserCollection(
   );
 }
 
+export function listPublicCollections(locale: string) {
+  return apiRequest<PublicCollectionSummary[]>(
+    `/public-collections?locale=${locale}`,
+  );
+}
+
+export function getPublicCollection(
+  userCollectionId: string,
+  locale: string,
+) {
+  return apiRequest<UserCollectionDetail & { user: { id: string; name: string } }>(
+    `/public-collections/${userCollectionId}?locale=${locale}`,
+  );
+}
+
 export function getUserCollectionProgress(
   token: string,
   userCollectionId: string,
@@ -272,6 +304,50 @@ export function validateScanCandidates(
   );
 }
 
+export type MatchSticker = {
+  id: string;
+  code: string;
+  name: string;
+  type: string;
+  albumOrder: number;
+  tradeWeight: number;
+  section: { id: string; name: string } | null;
+  player: { name: string } | null;
+};
+
+export type MatchResult = {
+  visitorCanGive: MatchSticker[];
+  targetCanGive: MatchSticker[];
+};
+
+export function getCollectionMatch(
+  token: string,
+  userCollectionId: string,
+  targetUserCollectionId: string,
+  locale: string,
+) {
+  return authenticatedApiRequest<MatchResult>(
+    `/user-collections/${userCollectionId}/match/${targetUserCollectionId}?locale=${locale}`,
+    token,
+  );
+}
+
+export function setStickerTradeWeight(
+  token: string,
+  userCollectionId: string,
+  stickerId: string,
+  weight: number,
+) {
+  return authenticatedApiRequest<{ stickerId: string; tradeWeight: number }>(
+    `/user-collections/${userCollectionId}/stickers/${stickerId}/weight`,
+    token,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ weight }),
+    },
+  );
+}
+
 export function confirmManualScan(
   token: string,
   userCollectionId: string,
@@ -287,3 +363,38 @@ export function confirmManualScan(
     },
   );
 }
+
+export function toggleCollectionVisibility(
+  token: string,
+  userCollectionId: string,
+  isPublic: boolean,
+) {
+  return authenticatedApiRequest<{ isPublic: boolean }>(
+    `/user-collections/${userCollectionId}/visibility`,
+    token,
+    { method: 'PATCH', body: JSON.stringify({ isPublic }) },
+  );
+}
+
+export function exportCollectionText(
+  token: string,
+  userCollectionId: string,
+) {
+  return authenticatedApiRequest<{ text: string }>(
+    `/user-collections/${userCollectionId}/export`,
+    token,
+  );
+}
+
+export function importCollectionText(
+  token: string,
+  userCollectionId: string,
+  textList: string,
+) {
+  return authenticatedApiRequest<{ imported: number; totalLines: number }>(
+    `/user-collections/${userCollectionId}/bulk-import`,
+    token,
+    { method: 'POST', body: JSON.stringify({ textList }) },
+  );
+}
+

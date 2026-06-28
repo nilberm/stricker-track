@@ -391,8 +391,73 @@
     "contactBody": "StickerTrack es un proyecto independiente sin asociación oficial con las marcas mencionadas. Debe publicarse un contacto responsable antes del lanzamiento."
   },
   "footer": {
-    "independence": "StickerTrack es una herramienta independiente para gestionar colecciones y no está afiliada, autorizada ni asociada con editoriales, organizaciones deportivas o titulares de las marcas mencionadas.",
+    "independence": "StickerTrack es una herramienta independiente para el control de colecciones y no tiene afiliación, autorización o asociación con editoriales, entidades deportivas ni titulares de las marcas mencionadas.",
     "privacy": "Privacidad",
     "terms": "Términos"
+  },
+  "community": {
+    "title": "Comunidad"
+  },
+  "collectionOverview": {
+    "actions": {
+      "explore": "Explorar Cromos",
+      "sync": "Sincronizar",
+      "public": "Pública",
+      "private": "Privada",
+      "publicDesc": "Otras personas pueden ver tu colección",
+      "privateDesc": "Solo tú puedes ver tu colección",
+      "transfer": "Importar/Exportar",
+      "import": "Importar colección",
+      "export": "Exportar colección",
+      "group": "Grupo {name}"
+    }
+  },
+  "transferModal": {
+    "title": "Sincronización de Colección",
+    "tabs": {
+      "import": "Importar",
+      "export": "Exportar"
+    },
+    "import": {
+      "instructions": "Pega una lista en el formato <strong>[Cantidad] [Código]</strong> (ej: <code class=\"bg-zinc-800 px-1 rounded\">2 BRA 10</code>).<br/>O selecciona un archivo .txt.",
+      "placeholder": "Ejemplo:\n1 FWC 1\n2 BRA 10",
+      "loadFile": "Cargar archivo .txt",
+      "submit": "Sincronizar",
+      "submitting": "Sincronizando...",
+      "success": "¡Importación completada! {imported} líneas procesadas (de {total}).",
+      "error": "Error al procesar la importación.",
+      "fileLoaded": "Archivo cargado. Revisa y haz clic en Sincronizar."
+    },
+    "export": {
+      "title": "Exporta tu Colección",
+      "description": "Genera un archivo de texto plano con todos los cromos que tienes. Ideal para copia de seguridad o compartir.",
+      "copy": "Copiar al portapapeles",
+      "download": "Descargar .txt",
+      "copied": "¡Copiado al portapapeles!",
+      "downloaded": "¡Archivo descargado con éxito!",
+      "error": "Error al exportar la colección."
+    }
+  },
+  "stickerExplorer": {
+    "title": "Explorador de Cromos",
+    "description": "Busca, filtra y gestiona toda tu colección en un solo lugar."
+  },
+  "collectorSidebar": {
+    "collapse": "Ocultar panel",
+    "expand": "Expandir panel",
+    "collected": "Cromos pegados",
+    "missing": "Aún faltan",
+    "duplicates": "Repetidos (Cambio)",
+    "none": "Ninguna",
+    "onTarget": "En el Blanco",
+    "glory": "Gloria (100%)",
+    "completedSections": "{count} Selecciones completas",
+    "exploration": "Exploración",
+    "myCollections": "Mis Colecciones",
+    "globalProgress": "Progreso global"
+  },
+  "overview": {
+    "searchPlaceholder": "Buscar selección (ej: BRA)",
+    "searchAria": "Filtrar por Código"
   }
 }

@@ -394,5 +394,70 @@
     "independence": "StickerTrack é uma ferramenta independente para controle de coleções e não possui vínculo, autorização ou associação com editoras, entidades esportivas ou titulares das marcas mencionadas.",
     "privacy": "Privacidade",
     "terms": "Termos"
+  },
+  "community": {
+    "title": "Comunidade"
+  },
+  "collectionOverview": {
+    "actions": {
+      "explore": "Explorar Figurinhas",
+      "sync": "Sincronizar",
+      "public": "Pública",
+      "private": "Privada",
+      "publicDesc": "Outras pessoas podem visualizar sua coleção",
+      "privateDesc": "Somente você pode visualizar sua coleção",
+      "transfer": "Importar/Exportar",
+      "import": "Importar coleção",
+      "export": "Exportar coleção",
+      "group": "Grupo {name}"
+    }
+  },
+  "transferModal": {
+    "title": "Sincronização de Coleção",
+    "tabs": {
+      "import": "Importar",
+      "export": "Exportar"
+    },
+    "import": {
+      "instructions": "Cole uma lista no formato <strong>[Quantidade] [Código]</strong> (ex: <code class=\"bg-zinc-800 px-1 rounded\">2 BRA 10</code>).<br/>Ou selecione um arquivo .txt.",
+      "placeholder": "Exemplo:\n1 FWC 1\n2 BRA 10",
+      "loadFile": "Carregar arquivo .txt",
+      "submit": "Sincronizar",
+      "submitting": "Sincronizando...",
+      "success": "Importação concluída! {imported} linhas processadas (de {total}).",
+      "error": "Erro ao processar a importação.",
+      "fileLoaded": "Arquivo carregado. Revise e clique em Sincronizar."
+    },
+    "export": {
+      "title": "Exporte sua Coleção",
+      "description": "Gere um arquivo de texto puro com todas as figurinhas que você possui. Ideal para backup ou compartilhar.",
+      "copy": "Copiar para Área de Transferência",
+      "download": "Baixar .txt",
+      "copied": "Copiado para a área de transferência!",
+      "downloaded": "Arquivo baixado com sucesso!",
+      "error": "Erro ao exportar a coleção."
+    }
+  },
+  "stickerExplorer": {
+    "title": "Explorador de Figurinhas",
+    "description": "Pesquise, filtre e gerencie todo o seu acervo em um só lugar."
+  },
+  "collectorSidebar": {
+    "collapse": "Recolher painel",
+    "expand": "Expandir painel",
+    "collected": "Figurinhas coladas",
+    "missing": "Ainda faltam",
+    "duplicates": "Repetidas (Troca)",
+    "none": "Nenhuma",
+    "onTarget": "No Alvo",
+    "glory": "Glória (100%)",
+    "completedSections": "{count} Seleções completas",
+    "exploration": "Exploração",
+    "myCollections": "Minhas Coleções",
+    "globalProgress": "Progresso global"
+  },
+  "overview": {
+    "searchPlaceholder": "Pesquisar seleção (ex: BRA)",
+    "searchAria": "Filtrar por Sigla"
   }
 }

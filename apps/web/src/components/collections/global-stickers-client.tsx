@@ -81,56 +81,58 @@ export function GlobalStickersClient({
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-5 py-10">
-      <nav className="mb-6 flex items-center gap-2 text-sm font-bold text-slate-500">
-        <Link className="text-sky-700 hover:underline" href="/my-collections">
-          {t('navigation.myCollections')}
-        </Link>
-        <span>/</span>
-        <Link
-          className="text-sky-700 hover:underline"
-          href={`/my-collections/${userCollectionId}`}
-        >
-          {t('common.backCollection')}
-        </Link>
-      </nav>
+    <div className="min-h-screen bg-zinc-950 px-5 py-10">
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-10 text-center">
+          <Link
+            className="mb-4 inline-block rounded-xl border border-zinc-800 bg-zinc-900/80 px-4 py-2 text-sm font-bold uppercase tracking-widest text-amber-500 transition hover:bg-zinc-800"
+            href={`/my-collections/${userCollectionId}`}
+          >
+            ← {t('common.backCollection')}
+          </Link>
+          <h1 className="text-4xl sm:text-5xl font-black text-amber-500 drop-shadow-md">
+            {t('stickerExplorer.title')}
+          </h1>
+          <p className="mt-4 text-sm sm:text-base font-semibold text-zinc-400">
+            {t('stickerExplorer.description')}
+          </p>
+        </header>
 
-      <header className="mb-8 flex items-center justify-between gap-4">
-        <h1 className="text-4xl font-black text-slate-800">
-          {t('myCollections.globalSearch')}
-        </h1>
-      </header>
+        <PersonalFilters
+          filters={filters}
+          onChange={applyFilters}
+          sections={progress.data?.sections ?? []}
+        />
 
-      <PersonalFilters
-        filters={filters}
-        onChange={applyFilters}
-        sections={progress.data?.sections ?? []}
-      />
-
-      {stickers.isPending ? (
-        <StateMessage message={t('common.loading')} />
-      ) : stickers.data?.data.length ? (
-        <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {stickers.data.data.map((sticker) => (
-              <PersonalStickerCard
-                key={sticker.id}
-                sticker={sticker}
-                token={token!}
-                userCollectionId={userCollectionId}
-              />
-            ))}
+        {stickers.isPending ? (
+          <div className="py-20 text-center text-xl font-bold tracking-widest text-zinc-600 uppercase">
+            {t('common.loading')}
           </div>
-          <Pagination
-            filters={filters}
-            onChange={applyFilters}
-            page={stickers.data.pagination.page}
-            totalPages={stickers.data.pagination.totalPages}
-          />
-        </>
-      ) : (
-        <StateMessage message={t('myCollections.noStickers')} />
-      )}
+        ) : stickers.data?.data.length ? (
+          <>
+            <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+              {stickers.data.data.map((sticker) => (
+                <PersonalStickerCard
+                  key={sticker.id}
+                  sticker={sticker}
+                  token={token!}
+                  userCollectionId={userCollectionId}
+                />
+              ))}
+            </div>
+            <Pagination
+              filters={filters}
+              onChange={applyFilters}
+              page={stickers.data.pagination.page}
+              totalPages={stickers.data.pagination.totalPages}
+            />
+          </>
+        ) : (
+          <div className="py-20 text-center text-xl font-bold tracking-widest text-zinc-600 uppercase">
+            {t('myCollections.noStickers')}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -146,9 +148,10 @@ function PersonalFilters({
 }) {
   const t = useTranslations();
   const [search, setSearch] = useState(filters.search);
+  
   return (
     <form
-      className="mb-10 grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 lg:grid-cols-5"
+      className="mb-10 grid gap-3 rounded-3xl border border-zinc-800 bg-zinc-900/50 p-4 lg:grid-cols-5 shadow-lg"
       onSubmit={(event) => {
         event.preventDefault();
         onChange({ ...filters, search, page: 1 });
@@ -156,14 +159,15 @@ function PersonalFilters({
     >
       <input
         aria-label={t('catalog.search')}
-        className="rounded-2xl border border-slate-300 px-4 py-3"
+        className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200 placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('catalog.searchPlaceholder')}
         value={search}
       />
+      
       <select
         aria-label={t('myCollections.statusFilter')}
-        className="rounded-2xl border border-slate-300 bg-white px-4 py-3"
+        className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200 focus:border-amber-500 focus:outline-none"
         onChange={(event) =>
           onChange({ ...filters, status: event.target.value, page: 1 })
         }
@@ -174,9 +178,10 @@ function PersonalFilters({
         <option value="missing">{t('myCollections.statusMissing')}</option>
         <option value="duplicates">{t('myCollections.statusDuplicates')}</option>
       </select>
+      
       <select
         aria-label={t('catalog.sectionFilter')}
-        className="rounded-2xl border border-slate-300 bg-white px-4 py-3"
+        className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200 focus:border-amber-500 focus:outline-none"
         onChange={(event) =>
           onChange({ ...filters, sectionId: event.target.value, page: 1 })
         }
@@ -189,9 +194,10 @@ function PersonalFilters({
           </option>
         ))}
       </select>
+      
       <select
         aria-label={t('catalog.typeFilter')}
-        className="rounded-2xl border border-slate-300 bg-white px-4 py-3"
+        className="rounded-2xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-zinc-200 focus:border-amber-500 focus:outline-none"
         onChange={(event) =>
           onChange({ ...filters, type: event.target.value, page: 1 })
         }
@@ -204,10 +210,11 @@ function PersonalFilters({
           </option>
         ))}
       </select>
+      
       <div className="flex gap-2">
         <select
           aria-label={t('catalog.sort')}
-          className="min-w-0 flex-1 rounded-2xl border border-slate-300 bg-white px-3"
+          className="min-w-0 flex-1 rounded-2xl border border-zinc-700 bg-zinc-950 px-3 text-zinc-200 focus:border-amber-500 focus:outline-none"
           onChange={(event) =>
             onChange({ ...filters, sort: event.target.value, page: 1 })
           }
@@ -218,7 +225,7 @@ function PersonalFilters({
           <option value="name">{t('sort.name')}</option>
         </select>
         <button
-          className="rounded-2xl bg-sky-600 px-4 font-bold text-white transition-colors hover:bg-sky-700"
+          className="rounded-2xl bg-amber-600 px-4 font-bold text-zinc-950 transition-colors hover:bg-amber-500"
           type="submit"
         >
           {t('common.search')}
@@ -241,20 +248,20 @@ function Pagination({
 }) {
   const t = useTranslations();
   return (
-    <nav className="mt-8 flex items-center justify-center gap-4">
+    <nav className="mt-12 flex items-center justify-center gap-6">
       <button
-        className="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-bold transition-colors hover:bg-slate-50 disabled:opacity-40"
+        className="rounded-xl border border-zinc-800 bg-zinc-900 px-6 py-3 font-bold text-amber-500 transition hover:bg-zinc-800 disabled:opacity-30"
         disabled={page <= 1}
         onClick={() => onChange({ ...filters, page: page - 1 })}
         type="button"
       >
         {t('pagination.previous')}
       </button>
-      <span className="font-bold text-slate-500">
+      <span className="font-bold text-zinc-500">
         {t('pagination.page', { page, totalPages })}
       </span>
       <button
-        className="rounded-2xl border border-slate-300 bg-white px-6 py-3 font-bold transition-colors hover:bg-slate-50 disabled:opacity-40"
+        className="rounded-xl border border-zinc-800 bg-zinc-900 px-6 py-3 font-bold text-amber-500 transition hover:bg-zinc-800 disabled:opacity-30"
         disabled={page >= totalPages}
         onClick={() => onChange({ ...filters, page: page + 1 })}
         type="button"
@@ -267,7 +274,7 @@ function Pagination({
 
 function StateMessage({ message }: { message: string }) {
   return (
-    <div className="rounded-3xl border-2 border-dashed border-slate-200 bg-white p-12 text-center text-lg font-bold text-slate-500">
+    <div className="py-20 text-center text-xl font-bold tracking-widest text-zinc-600 uppercase">
       {message}
     </div>
   );
@@ -279,7 +286,7 @@ function buildStickerQuery(locale: Locale, filters: Filters) {
     status: filters.status,
     sort: filters.sort,
     page: String(filters.page),
-    limit: '24',
+    limit: '48',
   });
   if (filters.search) query.set('search', filters.search);
   if (filters.sectionId) query.set('sectionId', filters.sectionId);

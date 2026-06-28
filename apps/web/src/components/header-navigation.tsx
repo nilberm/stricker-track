@@ -114,12 +114,20 @@ export function HeaderNavigation() {
             {t('navigation.myCollections')}
           </Link>
           {user?.role === 'ADMIN' ? (
-            <Link
-              className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
-              href="/admin/players"
-            >
-              {t('admin.players')}
-            </Link>
+            <>
+              <Link
+                className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
+                href="/community"
+              >
+                {t('community.title')}
+              </Link>
+              <Link
+                className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
+                href="/admin/players"
+              >
+                {t('admin.players')}
+              </Link>
+            </>
           ) : null}
           {user && <AvatarDropdown user={user} />}
         </>

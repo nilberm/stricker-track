@@ -1,0 +1,10 @@
+const { spawnSync } = require('child_process');
+const fs = require('fs');
+const path = require('path');
+const envPath = path.join(__dirname, '../../.env');
+const env = fs.readFileSync(envPath, 'utf-8');
+const dbUrl = env.split('\n').find(line => line.startsWith('DATABASE_URL=')).split('DATABASE_URL=')[1].trim();
+process.env.DATABASE_URL = dbUrl;
+console.log('Running db push...');
+const result = spawnSync('npx', ['prisma', 'db', 'push', '--accept-data-loss'], { cwd: __dirname, stdio: 'inherit', shell: true });
+if (result.status !== 0) process.exit(1);

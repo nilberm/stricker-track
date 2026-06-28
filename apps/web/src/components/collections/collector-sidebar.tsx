@@ -18,11 +18,14 @@ type CollectorSidebarProps = {
   progress: any;
 };
 
+import { useTranslations } from "next-intl";
+
 export function CollectorSidebar({
   isExpanded,
   setIsExpanded,
   progress,
 }: CollectorSidebarProps) {
+  const t = useTranslations("collectorSidebar");
   if (!progress) return null;
 
   const totalStickers = progress.totalStickers || 0;
@@ -36,11 +39,11 @@ export function CollectorSidebar({
   // No Alvo (closest to 100 but not 100)
   const noAlvo = [...sections]
     .filter((s) => s.percentage < 100)
-    .sort((a, b) => b.percentage - a.percentage)[0] || { name: 'Nenhuma', percentage: 0 };
+    .sort((a, b) => b.percentage - a.percentage)[0] || { name: t('none'), percentage: 0 };
     
   // Exploração (lowest percentage)
   const exploracao = [...sections]
-    .sort((a, b) => a.percentage - b.percentage)[0] || { name: 'Nenhuma', percentage: 0 };
+    .sort((a, b) => a.percentage - b.percentage)[0] || { name: t('none'), percentage: 0 };
     
   // Glória (100%)
   const gloria = sections.filter((s: any) => s.percentage === 100).length;
@@ -58,7 +61,7 @@ export function CollectorSidebar({
       <button
         type="button"
         onClick={() => setIsExpanded((current) => !current)}
-        aria-label={isExpanded ? "Recolher painel" : "Expandir painel"}
+        aria-label={isExpanded ? t('collapse') : t('expand')}
         className="
           absolute -right-8 top-6 z-10
           flex h-10 w-8
@@ -100,7 +103,7 @@ export function CollectorSidebar({
             ${isExpanded ? "px-5 py-6" : "px-3 py-5"}
           `}
         >
-          <SidebarHeader isExpanded={isExpanded} />
+          <SidebarHeader isExpanded={isExpanded} t={t} />
 
           <div className={isExpanded ? "mt-6" : "mt-5"}>
             <ProgressCard
@@ -108,6 +111,7 @@ export function CollectorSidebar({
               percentage={globalPercentage}
               collected={collectedStickers}
               total={totalStickers}
+              t={t}
             />
           </div>
 
@@ -119,7 +123,7 @@ export function CollectorSidebar({
           >
             <StatItem
               icon={<CircleCheck size={20} />}
-              label="Figurinhas coladas"
+              label={t('collected')}
               value={collectedStickers}
               colorClass="text-emerald-400"
               isExpanded={isExpanded}
@@ -127,7 +131,7 @@ export function CollectorSidebar({
 
             <StatItem
               icon={<Search size={20} />}
-              label="Ainda faltam"
+              label={t('missing')}
               value={missingStickers}
               colorClass="text-pink-500"
               isExpanded={isExpanded}
@@ -135,7 +139,7 @@ export function CollectorSidebar({
 
             <StatItem
               icon={<Copy size={20} />}
-              label="Repetidas (Troca)"
+              label={t('duplicates')}
               value={duplicateStickers}
               colorClass="text-violet-400"
               isExpanded={isExpanded}
@@ -147,6 +151,7 @@ export function CollectorSidebar({
               isExpanded={isExpanded}
               teamName={noAlvo.name}
               percentage={noAlvo.percentage}
+              t={t}
             />
           </div>
 
@@ -158,8 +163,8 @@ export function CollectorSidebar({
           >
             <TeamRankingItem
               icon={<Trophy size={19} />}
-              label="Glória (100%)"
-              teamName={`${gloria} Seleções completas`}
+              label={t('glory')}
+              teamName={t('completedSections', { count: gloria })}
               percentage={gloria > 0 ? 100 : 0}
               colorClass="text-amber-400"
               isExpanded={isExpanded}
@@ -168,7 +173,7 @@ export function CollectorSidebar({
 
             <TeamRankingItem
               icon={<Flag size={19} />}
-              label="Exploração"
+              label={t('exploration')}
               teamName={exploracao.name}
               percentage={exploracao.percentage}
               colorClass="text-zinc-400"
@@ -183,9 +188,10 @@ export function CollectorSidebar({
 
 type SidebarHeaderProps = {
   isExpanded: boolean;
+  t: any;
 };
 
-function SidebarHeader({ isExpanded }: SidebarHeaderProps) {
+function SidebarHeader({ isExpanded, t }: SidebarHeaderProps) {
   return (
     <div
       className={`
@@ -208,7 +214,7 @@ function SidebarHeader({ isExpanded }: SidebarHeaderProps) {
       {isExpanded && (
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
-            Minhas Coleções
+            {t('myCollections')}
           </p>
 
           <h2 className="truncate text-base font-bold uppercase tracking-wide text-amber-500">
@@ -225,6 +231,7 @@ type ProgressCardProps = {
   percentage: number;
   collected: number;
   total: number;
+  t: any;
 };
 
 function ProgressCard({
@@ -232,6 +239,7 @@ function ProgressCard({
   percentage,
   collected,
   total,
+  t
 }: ProgressCardProps) {
   if (!isExpanded) {
     return (
@@ -242,7 +250,7 @@ function ProgressCard({
           bg-white/[0.04]
           px-2 py-3
         "
-        title={`Progresso global: ${percentage}%`}
+        title={`${t('globalProgress')}: ${percentage}%`}
       >
         <Sparkles size={19} className="text-amber-500" />
 
@@ -258,7 +266,7 @@ function ProgressCard({
       <div className="flex items-end justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-            Progresso global
+            {t('globalProgress')}
           </p>
 
           <p className="mt-1 text-4xl font-black text-amber-500">
@@ -357,12 +365,14 @@ type CurrentTeamCardProps = {
   isExpanded: boolean;
   teamName: string;
   percentage: number;
+  t: any;
 };
 
 function CurrentTeamCard({
   isExpanded,
   teamName,
   percentage,
+  t
 }: CurrentTeamCardProps) {
   if (!isExpanded) {
     return (
@@ -387,7 +397,7 @@ function CurrentTeamCard({
   return (
     <div className="rounded-2xl border border-amber-500/15 bg-amber-500/[0.06] p-4">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
-        🎯 No Alvo
+        🎯 {t('onTarget')}
       </p>
 
       <div className="mt-2 flex items-center justify-between gap-3">

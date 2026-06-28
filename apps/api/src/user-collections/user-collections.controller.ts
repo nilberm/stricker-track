@@ -7,6 +7,7 @@ import {
   ParseUUIDPipe,
   Post,
   Put,
+  Patch,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -19,6 +20,9 @@ import {
   ChangeQuantityDto,
   ListUserStickersDto,
   SetQuantityDto,
+  ToggleVisibilityDto,
+  SetWeightDto,
+  BulkImportDto,
 } from './dto/user-collection.dto';
 import { UserCollectionsService } from './user-collections.service';
 
@@ -64,6 +68,21 @@ export class UserCollectionsController {
     return this.userCollections.progress(
       user.userId,
       userCollectionId,
+      query.locale,
+    );
+  }
+
+  @Get('user-collections/:userCollectionId/match/:targetUserCollectionId')
+  matchCollections(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('userCollectionId', ParseUUIDPipe) userCollectionId: string,
+    @Param('targetUserCollectionId', ParseUUIDPipe) targetUserCollectionId: string,
+    @Query() query: LocaleQueryDto,
+  ) {
+    return this.userCollections.getMatch(
+      user.userId,
+      userCollectionId,
+      targetUserCollectionId,
       query.locale,
     );
   }
@@ -136,6 +155,55 @@ export class UserCollectionsController {
       user.userId,
       userCollectionId,
       stickerId,
+    );
+  }
+
+  @Patch('user-collections/:userCollectionId/stickers/:stickerId/weight')
+  setWeight(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('userCollectionId', ParseUUIDPipe) userCollectionId: string,
+    @Param('stickerId', ParseUUIDPipe) stickerId: string,
+    @Body() input: SetWeightDto,
+  ) {
+    return this.userCollections.setTradeWeight(
+      user.userId,
+      userCollectionId,
+      stickerId,
+      input.weight,
+    );
+  }
+
+  @Patch('user-collections/:userCollectionId/visibility')
+  toggleVisibility(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('userCollectionId', ParseUUIDPipe) userCollectionId: string,
+    @Body() input: ToggleVisibilityDto,
+  ) {
+    return this.userCollections.toggleVisibility(
+      user.userId,
+      userCollectionId,
+      input.isPublic,
+    );
+  }
+
+  @Get('user-collections/:userCollectionId/export')
+  export(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('userCollectionId', ParseUUIDPipe) userCollectionId: string,
+  ) {
+    return this.userCollections.export(user.userId, userCollectionId);
+  }
+
+  @Post('user-collections/:userCollectionId/bulk-import')
+  bulkImport(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('userCollectionId', ParseUUIDPipe) userCollectionId: string,
+    @Body() input: BulkImportDto,
+  ) {
+    return this.userCollections.bulkImport(
+      user.userId,
+      userCollectionId,
+      input.textList,
     );
   }
 }

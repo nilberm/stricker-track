@@ -9,6 +9,7 @@ import {
   IsUUID,
   Max,
   Min,
+  IsBoolean,
 } from 'class-validator';
 import { LocaleQueryDto } from '../../collections/dto/locale-query.dto';
 import { StickerSort } from '../../collections/dto/list-stickers.dto';
@@ -80,3 +81,22 @@ export class ProgressQueryDto extends LocaleQueryDto {
   @IsIn(['summary'])
   view?: 'summary';
 }
+
+export class ToggleVisibilityDto {
+  @IsBoolean()
+  isPublic!: boolean;
+}
+
+export class SetWeightDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(99)
+  weight!: number;
+}
+
+export class BulkImportDto {
+  @IsString()
+  textList!: string;
+}
+

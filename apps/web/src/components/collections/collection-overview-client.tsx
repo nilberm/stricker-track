@@ -5,8 +5,9 @@ import { useRouter, Link } from '../../i18n/navigation';
 import { useState } from 'react';
 import { accessTokenKey } from '../../lib/auth';
 import type { Locale } from '../../i18n/config';
-import { usePersonalCollection, usePersonalCollectionProgress } from '../../hooks/use-personal-collection';
+import { usePersonalCollection, usePersonalCollectionProgress, useToggleCollectionVisibility } from '../../hooks/use-personal-collection';
 import { CollectorSidebar } from './collector-sidebar';
+import { TransferModal } from './transfer-modal';
 
 function getFlagUrl(sectionCode: string, iso2: string | null) {
   if (sectionCode === 'ENG') return '/flags/england.png';
@@ -23,6 +24,7 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
 
   const detail = usePersonalCollection(userCollectionId, locale, token);
   const progress = usePersonalCollectionProgress(userCollectionId, locale, token);
+  const toggleVisibility = useToggleCollectionVisibility(userCollectionId, token);
 
   if (!token && typeof window !== 'undefined') {
     router.replace('/login');
@@ -50,6 +52,10 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
 
   const [instantFilter, setInstantFilter] = useState('');
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
+  const [transferTab, setTransferTab] = useState<'import' | 'export'>('import');
+  const [isVisDropdownOpen, setIsVisDropdownOpen] = useState(false);
+  const [isTransferDropdownOpen, setIsTransferDropdownOpen] = useState(false);
   const isFiltering = instantFilter.length > 0;
   const filteredSections = isFiltering ? sections.filter(s => s.code.startsWith(instantFilter)) : [];
 
@@ -67,9 +73,11 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
         <Link className="text-sm font-bold uppercase tracking-widest text-amber-500 hover:text-amber-400" href="/my-collections">
           {t('myCollections.back')}
         </Link>
-        <h1 className="mt-4 text-4xl font-black text-slate-100 drop-shadow-md">
-          {detail.data?.collection.name ?? t('common.loading')}
-        </h1>
+        <div className="mt-4 flex items-center gap-4">
+          <h1 className="text-4xl font-black text-slate-100 drop-shadow-md">
+            {detail.data?.collection.name ?? t('common.loading')}
+          </h1>
+        </div>
         {detail.data?.collection.description && (
           <p className="mt-3 max-w-3xl text-lg text-amber-100/70">
             {detail.data.collection.description}
@@ -112,7 +120,7 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
       <div className="mb-10 flex flex-col gap-4 max-w-xl mx-auto lg:max-w-none lg:mx-0">
         {/* Row 1: Instant Filter */}
         <div className="w-full relative">
-          <label htmlFor="globalSearch" className="sr-only">Filtrar por Sigla</label>
+          <label htmlFor="globalSearch" className="sr-only">{t('overview.searchAria')}</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
               <span className="text-xl text-amber-500">🛡️</span>
@@ -121,7 +129,7 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
               id="globalSearch"
               type="text"
               className="w-full rounded-2xl border-2 border-zinc-800 bg-zinc-900/80 px-4 py-3 pl-12 text-base font-black tracking-[0.2em] text-amber-400 placeholder-zinc-600 outline-none transition focus:border-amber-500 focus:bg-zinc-900 shadow-inner uppercase"
-              placeholder="PESQUISAR SELEÇÃO (EX: BRA)"
+              placeholder={t('overview.searchPlaceholder')}
               value={instantFilter}
               onChange={(e) => {
                 const val = e.target.value.replace(/[^a-zA-Z]/g, '').toUpperCase().slice(0, 3);
@@ -132,21 +140,103 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
         </div>
 
         {/* Row 2: Secondary Actions */}
-        <div className="flex gap-3 justify-center lg:justify-start">
+        <div className="flex flex-col sm:flex-row gap-3 mt-2">
+          {/* Primary Action */}
           <Link
-            href={`/my-collections/${userCollectionId}/missing`}
-            className="flex items-center gap-2 rounded-xl bg-zinc-800 border border-amber-900/30 px-3 py-1.5 text-xs sm:text-sm font-bold text-zinc-300 transition-colors hover:border-amber-700/50 hover:text-amber-500"
+            href={`/my-collections/${userCollectionId}/stickers`}
+            className="flex items-center justify-center gap-2 rounded-xl bg-amber-500 border border-amber-500/30 px-6 py-3 text-sm font-black text-amber-950 transition-colors hover:bg-amber-400 sm:w-auto w-full shadow-lg shadow-amber-500/20"
           >
-            <span className="text-sm">🔍</span>
-            <span className="tracking-wider uppercase">{t('myCollections.viewMissing')}</span>
+            <span className="text-base">🔍</span>
+            <span className="tracking-widest uppercase">{t('collectionOverview.actions.explore')}</span>
           </Link>
-          <Link
-            href={`/my-collections/${userCollectionId}/repeated`}
-            className="flex items-center gap-2 rounded-xl bg-zinc-800 border border-amber-900/30 px-3 py-1.5 text-xs sm:text-sm font-bold text-zinc-300 transition-colors hover:border-amber-700/50 hover:text-amber-500"
-          >
-            <span className="text-sm">🔄</span>
-            <span className="tracking-wider uppercase">{t('myCollections.viewDuplicates')}</span>
-          </Link>
+          
+          <div className="flex gap-3 w-full sm:w-auto">
+            {/* Visibility Control */}
+            {detail.data && (
+              <div className="relative flex-1 sm:flex-none">
+                <button
+                  onClick={() => {
+                    setIsVisDropdownOpen(!isVisDropdownOpen);
+                    setIsTransferDropdownOpen(false);
+                  }}
+                  onBlur={() => setTimeout(() => setIsVisDropdownOpen(false), 150)}
+                  className={`flex h-full w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-bold transition-colors shadow-sm ${
+                    detail.data.isPublic 
+                      ? 'bg-teal-500/10 border-teal-500/30 text-teal-400 hover:bg-teal-500/20' 
+                      : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-300 hover:bg-zinc-700'
+                  }`}
+                >
+                  <span className="text-base">{detail.data.isPublic ? '🌎' : '🔒'}</span>
+                  <span className="tracking-widest uppercase">
+                    {detail.data.isPublic ? t('collectionOverview.actions.public') : t('collectionOverview.actions.private')}
+                  </span>
+                  <span className="text-[10px] ml-1 opacity-60">▼</span>
+                </button>
+                
+                {isVisDropdownOpen && (
+                  <div className="absolute left-0 sm:left-auto top-full mt-2 w-64 flex-col gap-1 rounded-xl border border-zinc-800 bg-zinc-950 p-2 shadow-xl flex z-10">
+                    <button
+                      onClick={() => toggleVisibility.mutate(true)}
+                      className="flex flex-col items-start rounded-lg p-2 hover:bg-zinc-900 transition-colors text-left"
+                    >
+                      <span className="text-sm font-bold text-teal-400">🌎 {t('collectionOverview.actions.public')}</span>
+                      <span className="text-xs text-zinc-500">{t('collectionOverview.actions.publicDesc')}</span>
+                    </button>
+                    <button
+                      onClick={() => toggleVisibility.mutate(false)}
+                      className="flex flex-col items-start rounded-lg p-2 hover:bg-zinc-900 transition-colors text-left mt-1"
+                    >
+                      <span className="text-sm font-bold text-zinc-300">🔒 {t('collectionOverview.actions.private')}</span>
+                      <span className="text-xs text-zinc-500">{t('collectionOverview.actions.privateDesc')}</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Transfer Control */}
+            <div className="relative flex-1 sm:flex-none">
+              <button
+                onClick={() => {
+                  setIsTransferDropdownOpen(!isTransferDropdownOpen);
+                  setIsVisDropdownOpen(false);
+                }}
+                onBlur={() => setTimeout(() => setIsTransferDropdownOpen(false), 150)}
+                className="flex h-full w-full items-center justify-center gap-2 rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-3 text-sm font-bold text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white shadow-sm"
+              >
+                <span className="text-base">⇅</span>
+                <span className="tracking-widest uppercase">
+                  {t('collectionOverview.actions.transfer')}
+                </span>
+                <span className="text-[10px] ml-1 opacity-60">▼</span>
+              </button>
+              
+              {isTransferDropdownOpen && (
+                <div className="absolute right-0 sm:right-auto top-full mt-2 w-48 flex-col gap-1 rounded-xl border border-zinc-800 bg-zinc-950 p-2 shadow-xl flex z-10">
+                  <button
+                    onClick={() => {
+                      setTransferTab('import');
+                      setIsTransferModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 rounded-lg p-3 hover:bg-zinc-900 transition-colors text-left"
+                  >
+                    <span className="text-base">📥</span>
+                    <span className="text-sm font-bold text-zinc-300">{t('collectionOverview.actions.import')}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTransferTab('export');
+                      setIsTransferModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 rounded-lg p-3 hover:bg-zinc-900 transition-colors text-left mt-1"
+                  >
+                    <span className="text-base">📤</span>
+                    <span className="text-sm font-bold text-zinc-300">{t('collectionOverview.actions.export')}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -225,6 +315,14 @@ export function CollectionOverviewClient({ userCollectionId }: { userCollectionI
         </>
       )}
       </div>
+
+      <TransferModal
+        isOpen={isTransferModalOpen}
+        onClose={() => setIsTransferModalOpen(false)}
+        userCollectionId={userCollectionId}
+        token={token!}
+        initialTab={transferTab}
+      />
     </div>
   );
 }

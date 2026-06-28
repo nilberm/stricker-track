@@ -19,6 +19,7 @@ export function FilteredStickersClient({
   const t = useTranslations();
   const router = useRouter();
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
 
   const token =
     typeof window === 'undefined'
@@ -32,6 +33,10 @@ export function FilteredStickersClient({
     page: String(page),
     limit: '48',
   });
+  
+  if (search) {
+    qs.set('search', search);
+  }
 
   const stickers = usePersonalStickers(userCollectionId, token, qs.toString());
 
@@ -62,6 +67,19 @@ export function FilteredStickersClient({
               ? 'O mural de recompensas. As lendas que faltam para sua glória.'
               : 'Seu tesouro acumulado. Figurões prontos para negociação.'}
           </p>
+          
+          <div className="mt-8 max-w-md mx-auto">
+            <input
+              type="search"
+              placeholder={t('catalog.searchPlaceholder')}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1); // Reset page on new search
+              }}
+              className="w-full rounded-xl border border-zinc-700 bg-zinc-900/80 px-4 py-3 text-zinc-200 placeholder-zinc-500 shadow-inner focus:border-amber-500 focus:outline-none"
+            />
+          </div>
         </header>
 
         {stickers.isPending ? (

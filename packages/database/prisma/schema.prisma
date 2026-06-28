@@ -101,6 +101,9 @@ model User {
   approvedPlayers Player[]         @relation("PlayerApprovedBy")
   reviewedImages  PlayerImage[]    @relation("PlayerImageReviewedBy")
   catalogImports  CatalogImport[]
+  chatsAsUserA    TradeChat[]      @relation("ChatUserA")
+  chatsAsUserB    TradeChat[]      @relation("ChatUserB")
+  tradeMessages   TradeMessage[]
   passwordResetTokens PasswordResetToken[]
   emailVerificationTokens EmailVerificationToken[]
   emailVerifiedAt DateTime?
@@ -328,6 +331,7 @@ model UserCollection {
   collectionId String        @db.Uuid
   startedAt    DateTime      @default(now())
   completedAt  DateTime?
+  isPublic     Boolean       @default(false)
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   collection   Collection    @relation(fields: [collectionId], references: [id], onDelete: Cascade)
   userStickers UserSticker[]
@@ -345,6 +349,7 @@ model UserSticker {
   userCollectionId String         @db.Uuid
   stickerId        String         @db.Uuid
   quantity         Int            @default(0)
+  tradeWeight      Int            @default(1)
   firstAcquiredAt  DateTime?
   lastAcquiredAt   DateTime?
   userCollection   UserCollection @relation(fields: [userCollectionId], references: [id], onDelete: Cascade)
@@ -383,4 +388,33 @@ model StickerScan {
   @@index([userId, createdAt])
   @@index([userCollectionId, createdAt])
   @@index([collectionId, normalizedCode])
+}
+
+model TradeChat {
+  id        String   @id @default(uuid()) @db.Uuid
+  userAId   String   @db.Uuid
+  userBId   String   @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userA     User     @relation("ChatUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB     User     @relation("ChatUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  messages  TradeMessage[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, updatedAt(sort: Desc)])
+  @@index([userBId, updatedAt(sort: Desc)])
+}
+
+model TradeMessage {
+  id        String   @id @default(uuid()) @db.Uuid
+  chatId    String   @db.Uuid
+  senderId  String   @db.Uuid
+  content   String
+  createdAt DateTime @default(now())
+  
+  chat      TradeChat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender    User      @relation(fields: [senderId], references: [id], onDelete: Restrict)
+
+  @@index([chatId, createdAt(sort: Asc)])
 }

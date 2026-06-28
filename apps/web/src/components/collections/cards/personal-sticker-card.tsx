@@ -1,8 +1,8 @@
 import { useTranslations } from 'next-intl';
 import type { PersonalStickerPage } from '../../../lib/personal-collections';
-import { useStickerQuantityMutation } from '../../../hooks/use-personal-collection';
+import { useStickerQuantityMutation, useStickerWeightMutation } from '../../../hooks/use-personal-collection';
 import { Avatar } from '../../catalog/avatar';
-import { Check, Copy, Minus, Plus } from 'lucide-react';
+import { Check, Copy, Minus, Plus, ChevronUp, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 
@@ -17,6 +17,7 @@ export function PersonalStickerCard({
 }) {
   const t = useTranslations();
   const mutation = useStickerQuantityMutation(userCollectionId, token);
+  const weightMutation = useStickerWeightMutation(userCollectionId, token);
   
   const displayName = sticker.player?.displayName ?? sticker.player?.name ?? sticker.name;
   const isMissing = sticker.quantity === 0;
@@ -139,6 +140,29 @@ export function PersonalStickerCard({
           ) : (
             <>
               {/* Default view when collected */}
+              {hasExtras && (
+                <div className="absolute top-[-250%] right-[-10%] flex flex-col gap-1 items-end opacity-0 group-hover:opacity-100 transition-all z-20">
+                  <div className="flex items-center gap-1 bg-zinc-950/90 rounded border border-zinc-700 p-1 shadow-lg pointer-events-auto">
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); weightMutation.mutate({ stickerId: sticker.id, weight: Math.max(1, sticker.tradeWeight - 1) }); }}
+                      disabled={weightMutation.isPending || sticker.tradeWeight <= 1}
+                      className="p-0.5 text-zinc-400 hover:text-amber-500 disabled:opacity-30"
+                    >
+                      <ChevronDown size={14} />
+                    </button>
+                    <span className="text-[10px] font-bold text-amber-500 w-12 text-center">
+                      Peso {sticker.tradeWeight}
+                    </span>
+                    <button 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); weightMutation.mutate({ stickerId: sticker.id, weight: Math.min(99, sticker.tradeWeight + 1) }); }}
+                      disabled={weightMutation.isPending}
+                      className="p-0.5 text-zinc-400 hover:text-amber-500 disabled:opacity-30"
+                    >
+                      <ChevronUp size={14} />
+                    </button>
+                  </div>
+                </div>
+              )}
               {hasExtras && (
                 <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black text-amber-500 bg-zinc-950/90 px-2.5 py-0.5 rounded border border-amber-500/30 shadow-md">
                   <Copy size={10} />

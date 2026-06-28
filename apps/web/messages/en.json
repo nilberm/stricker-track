@@ -391,8 +391,73 @@
     "contactBody": "StickerTrack is an independent project with no official association with mentioned brands. A responsible contact must be published before launch."
   },
   "footer": {
-    "independence": "StickerTrack is an independent collection management tool and is not affiliated with, authorized by, or associated with publishers, sports organizations, or owners of the mentioned trademarks.",
+    "independence": "StickerTrack is an independent tool for managing collections and has no affiliation, authorization, or association with publishers, sports entities, or trademark owners mentioned.",
     "privacy": "Privacy",
     "terms": "Terms"
+  },
+  "community": {
+    "title": "Community"
+  },
+  "collectionOverview": {
+    "actions": {
+      "explore": "Explore Stickers",
+      "sync": "Sync",
+      "public": "Public",
+      "private": "Private",
+      "publicDesc": "Other people can view your collection",
+      "privateDesc": "Only you can view your collection",
+      "transfer": "Import/Export",
+      "import": "Import collection",
+      "export": "Export collection",
+      "group": "Group {name}"
+    }
+  },
+  "transferModal": {
+    "title": "Collection Sync",
+    "tabs": {
+      "import": "Import",
+      "export": "Export"
+    },
+    "import": {
+      "instructions": "Paste a list in the format <strong>[Quantity] [Code]</strong> (e.g., <code class=\"bg-zinc-800 px-1 rounded\">2 BRA 10</code>).<br/>Or select a .txt file.",
+      "placeholder": "Example:\n1 FWC 1\n2 BRA 10",
+      "loadFile": "Load .txt file",
+      "submit": "Sync",
+      "submitting": "Syncing...",
+      "success": "Import complete! {imported} rows processed (of {total}).",
+      "error": "Error processing import.",
+      "fileLoaded": "File loaded. Review and click Sync."
+    },
+    "export": {
+      "title": "Export your Collection",
+      "description": "Generate a plain text file with all the stickers you own. Ideal for backup or sharing.",
+      "copy": "Copy to Clipboard",
+      "download": "Download .txt",
+      "copied": "Copied to clipboard!",
+      "downloaded": "File downloaded successfully!",
+      "error": "Error exporting collection."
+    }
+  },
+  "stickerExplorer": {
+    "title": "Sticker Explorer",
+    "description": "Search, filter, and manage your entire collection in one place."
+  },
+  "collectorSidebar": {
+    "collapse": "Collapse panel",
+    "expand": "Expand panel",
+    "collected": "Collected stickers",
+    "missing": "Still missing",
+    "duplicates": "Duplicates (Trade)",
+    "none": "None",
+    "onTarget": "On Target",
+    "glory": "Glory (100%)",
+    "completedSections": "{count} Completed sections",
+    "exploration": "Exploration",
+    "myCollections": "My Collections",
+    "globalProgress": "Global progress"
+  },
+  "overview": {
+    "searchPlaceholder": "Search section (e.g., BRA)",
+    "searchAria": "Filter by Code"
   }
 }

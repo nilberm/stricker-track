@@ -79,21 +79,51 @@ const FEDERATION_PAGES: Record<string, number> = {
   ENG: 98, CRO: 100, GHA: 102, PAN: 104
 };
 
-const pageVariants = {
+const leftPageVariants = {
   enter: (direction: number) => ({
-    rotateY: direction > 0 ? 180 : -180,
-    opacity: 0,
-    zIndex: 0,
+    rotateY: direction > 0 ? 90 : 0,
+    zIndex: direction > 0 ? 10 : 1,
   }),
-  center: {
-    zIndex: 1,
+  center: (direction: number) => ({
     rotateY: 0,
-    opacity: 1,
-  },
+    zIndex: direction > 0 ? 10 : 1,
+    transition: { 
+      duration: direction > 0 ? 0.3 : 0.6, 
+      delay: direction > 0 ? 0.3 : 0, 
+      ease: direction > 0 ? 'easeOut' : 'linear' 
+    }
+  }),
   exit: (direction: number) => ({
-    zIndex: 0,
-    rotateY: direction > 0 ? -180 : 180,
-    opacity: 0,
+    rotateY: direction > 0 ? 0 : 90,
+    zIndex: direction > 0 ? 1 : 10,
+    transition: { 
+      duration: direction > 0 ? 0.6 : 0.3, 
+      ease: direction > 0 ? 'linear' : 'easeIn' 
+    }
+  }),
+};
+
+const rightPageVariants = {
+  enter: (direction: number) => ({
+    rotateY: direction < 0 ? -90 : 0,
+    zIndex: direction < 0 ? 10 : 1,
+  }),
+  center: (direction: number) => ({
+    rotateY: 0,
+    zIndex: direction < 0 ? 10 : 1,
+    transition: { 
+      duration: direction < 0 ? 0.3 : 0.6, 
+      delay: direction < 0 ? 0.3 : 0, 
+      ease: direction < 0 ? 'easeOut' : 'linear' 
+    }
+  }),
+  exit: (direction: number) => ({
+    rotateY: direction < 0 ? 0 : -90,
+    zIndex: direction < 0 ? 1 : 10,
+    transition: { 
+      duration: direction < 0 ? 0.6 : 0.3, 
+      ease: direction < 0 ? 'linear' : 'easeIn' 
+    }
   }),
 };
 
@@ -116,7 +146,7 @@ function getFlagUrl(sectionCode: string, iso2: string | null, width: 40 | 160 = 
 
 export function SectionDetailClient({
   userCollectionId,
-  sectionId,
+  sectionId: initialSectionId,
 }: {
   userCollectionId: string;
   sectionId: string;
@@ -127,6 +157,12 @@ export function SectionDetailClient({
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
+
+  const [activeSectionId, setActiveSectionId] = useState(initialSectionId);
+
+  useEffect(() => {
+    setActiveSectionId(initialSectionId);
+  }, [initialSectionId]);
 
   const [instantFilter, setInstantFilter] = useState('');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -148,7 +184,7 @@ export function SectionDetailClient({
 
   const queryParams = new URLSearchParams({
     locale,
-    sectionId,
+    sectionId: activeSectionId,
     limit: '1000', // Fetch practically all stickers of this section to group them client-side
   });
   if (search) queryParams.set('search', search);
@@ -156,7 +192,7 @@ export function SectionDetailClient({
 
   const stickers = usePersonalStickers(userCollectionId, token, queryParams.toString());
 
-  const currentIndex = progress.data?.sections?.findIndex((s) => s.sectionId === sectionId) ?? -1;
+  const currentIndex = progress.data?.sections?.findIndex((s) => s.sectionId === activeSectionId) ?? -1;
   const prevSectionId = currentIndex > 0 ? progress.data?.sections?.[currentIndex - 1]?.sectionId : null;
   const nextSectionId =
     currentIndex !== -1 && currentIndex < (progress.data?.sections?.length ?? 0) - 1
@@ -199,7 +235,7 @@ export function SectionDetailClient({
     return <StateMessage message={t('myCollections.loadError')} />;
   }
 
-  const section = progress.data?.sections?.find((s) => s.sectionId === sectionId);
+  const section = progress.data?.sections?.find((s) => s.sectionId === activeSectionId);
   const collectionName = progress.data ? 'StickerTrack' : t('common.loading'); 
   const isNationalTeam = section?.type === 'NATIONAL_TEAM';
 
@@ -209,7 +245,7 @@ export function SectionDetailClient({
   const rightStickers = stickersData.slice(half);
 
   const nationalTeams = progress.data?.sections?.filter((s) => s.type === 'NATIONAL_TEAM') ?? [];
-  const teamIndex = nationalTeams.findIndex((s) => s.sectionId === sectionId);
+  const teamIndex = nationalTeams.findIndex((s) => s.sectionId === activeSectionId);
   const groupIndex = Math.floor(teamIndex / 4);
   const groupTeams =
     teamIndex !== -1
@@ -220,23 +256,28 @@ export function SectionDetailClient({
     ? progress.data?.sections?.filter(s => s.code.toUpperCase().startsWith(instantFilter.toUpperCase()) || s.name.toUpperCase().startsWith(instantFilter.toUpperCase())) ?? []
     : [];
 
+  const handleNavigate = (newSectionId: string) => {
+    setActiveSectionId(newSectionId);
+    window.history.pushState(null, '', `/${locale}/my-collections/${userCollectionId}/sections/${newSectionId}`);
+  };
+
   return (
     <div className="mx-auto w-full max-w-[1600px] px-4 py-6 lg:flex lg:min-h-[calc(100vh-100px)] lg:items-center lg:justify-center" style={{ perspective: '2000px' }}>
       {prevSectionId && (
-        <Link
-          href={`/my-collections/${userCollectionId}/sections/${prevSectionId}`}
+        <button
+          onClick={() => handleNavigate(prevSectionId)}
           className="fixed left-2 top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/90 text-amber-500 shadow-lg transition-transform hover:scale-110 hover:bg-zinc-800 lg:left-8 lg:h-16 lg:w-16"
         >
           <svg className="h-6 w-6 lg:h-8 lg:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7"/></svg>
-        </Link>
+        </button>
       )}
       {nextSectionId && (
-        <Link
-          href={`/my-collections/${userCollectionId}/sections/${nextSectionId}`}
+        <button
+          onClick={() => handleNavigate(nextSectionId)}
           className="fixed right-2 top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/90 text-amber-500 shadow-lg transition-transform hover:scale-110 hover:bg-zinc-800 lg:right-8 lg:h-16 lg:w-16"
         >
           <svg className="h-6 w-6 lg:h-8 lg:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7"/></svg>
-        </Link>
+        </button>
       )}
 
       {/* Header and tools (Visible on mobile, absolute top on desktop if needed, or hidden if taking too much space) */}
@@ -360,120 +401,144 @@ export function SectionDetailClient({
         {stickers.isPending ? (
           <StateMessage message={t('common.loading')} />
         ) : stickersData.length ? (
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={sectionId}
-              custom={direction}
-              variants={pageVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
-              className="grid w-full gap-8 lg:grid-cols-2"
-              style={{ transformStyle: 'preserve-3d', transformOrigin: 'left center', backfaceVisibility: 'hidden' }}
-            >
-              {/* LEFT PAGE */}
-              <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
-                {isNationalTeam && (
-                  <div className="col-span-2 flex aspect-[3/2] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900/50 p-3 sm:p-4 shadow-inner lg:p-5">
-                    <div>
-                      <span className="block text-lg font-black text-zinc-600 sm:text-xl lg:text-2xl leading-none">WE ARE</span>
-                      <span 
-                        className={`block font-black uppercase tracking-tighter text-amber-500 drop-shadow-md leading-none mt-1 ${
-                          (section?.name?.length || 0) > 14 
-                            ? 'text-lg sm:text-xl lg:text-2xl' 
-                            : (section?.name?.length || 0) >= 8 
-                              ? 'text-xl sm:text-2xl lg:text-3xl' 
-                              : 'text-2xl sm:text-3xl lg:text-4xl'
-                        }`}
-                      >
-                        {section?.name}
-                      </span>
-                    </div>
-                    <div className="mt-2 sm:mt-auto flex items-center gap-2 sm:gap-3">
-                      { (section?.countryIso2 || section?.code) && (
-                        <img
-                          src={section?.code === 'ENG' ? '/flags/england.png' : section?.code === 'SCO' ? '/flags/scotland.png' : `https://flagsapi.com/${(section?.countryIso2 || section?.code?.substring(0, 2))?.toUpperCase()}/flat/64.png`}
-                          alt={section.name}
-                          className="h-6 w-10 shrink-0 rounded object-cover drop-shadow-md sm:h-8 sm:w-12 lg:h-10 lg:w-14"
-                          onError={(e) => {
-                            if (e.currentTarget.src.includes('flagsapi.com')) {
-                              e.currentTarget.src = getFlagUrl(section?.code || '', section?.countryIso2 || null, 160);
-                            } else {
-                              e.currentTarget.style.display = 'none';
-                            }
-                          }}
-                        />
-                      )}
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 sm:text-xs lg:text-sm leading-tight line-clamp-2">
-                        {FEDERATION_NAMES[section?.code || ''] || "National Football Association"}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                {leftStickers.map((sticker) => (
-                  <PersonalStickerCard
-                    key={sticker.id}
-                    sticker={sticker}
-                    token={token!}
-                    userCollectionId={userCollectionId}
-                  />
-                ))}
-              </div>
+          <div className="grid w-full" style={{ gridTemplateAreas: '"stack"', perspective: '2000px' }}>
+            <AnimatePresence mode="sync" custom={direction}>
+              <motion.div
+                key={activeSectionId}
+                custom={direction}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="grid w-full gap-0 lg:grid-cols-2"
+                style={{ gridArea: 'stack' }}
+              >
+                {/* LEFT PAGE */}
+                <motion.div
+                  custom={direction}
+                  variants={leftPageVariants}
+                  style={{ transformOrigin: 'right center', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                  className="w-full h-full relative"
+                >
+                  <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4 bg-zinc-900 p-4 sm:p-6 lg:p-8 border border-zinc-700/50 relative shadow-2xl h-full z-10">
+                    {/* Book spine shadow effect (Inside) */}
+                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/60 to-transparent pointer-events-none z-10"></div>
+                    {/* Page edge effect (Outside) */}
+                    <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white/5 to-transparent pointer-events-none z-10 border-l border-zinc-600/30"></div>
 
-              {/* RIGHT PAGE */}
-              <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4">
-                {rightStickers.map((sticker, index) => (
-                  <Fragment key={sticker.id}>
-                    {isNationalTeam && index === 7 && (
-                      <div className="col-span-1 flex aspect-[3/4] flex-col items-center justify-center p-2 text-center">
-                        <span className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500 drop-shadow-sm">
-                          Group {teamIndex !== -1 ? String.fromCharCode(65 + groupIndex) : 'Info'}
-                        </span>
-                        <div className="grid w-full grid-cols-2 gap-2">
-                          {groupTeams.map((team) => (
-                            <div key={team.sectionId} className="flex w-full rounded-md border border-zinc-800/50 shadow-sm overflow-hidden" style={{ borderTopRightRadius: '0.75rem', borderBottomRightRadius: '0.25rem' }}>
-                              {/* Left Strip (Black) */}
-                              <div className="flex w-5 shrink-0 items-center justify-center bg-zinc-950 border-r border-zinc-800/50">
-                                <span className="text-[8px] font-black uppercase tracking-widest text-zinc-200" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
-                                  {team.code}
-                                </span>
-                              </div>
-                              {/* Right part (Flag) */}
-                              <div className="flex-1 bg-zinc-900 flex">
-                                <img
-                                  src={getFlagUrl(team.code, team.countryIso2, 160)}
-                                  alt={team.name}
-                                  className="w-full h-auto block object-cover opacity-90"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    e.currentTarget.parentElement!.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-zinc-800/50 py-2"><span class="text-[8px] text-zinc-600">${team.code}</span></div>`;
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          ))}
-                          {groupTeams.length === 0 && (
-                            <div className="col-span-2 grid w-full grid-cols-2 gap-1 opacity-50 px-2">
-                              <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                              <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                              <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                              <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                            </div>
+                    {isNationalTeam && (
+                      <div className="col-span-2 flex aspect-[3/2] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900/50 p-3 sm:p-4 shadow-inner lg:p-5 relative z-20">
+                        <div>
+                          <span className="block text-lg font-black text-zinc-600 sm:text-xl lg:text-2xl leading-none">WE ARE</span>
+                          <span 
+                            className={`block font-black uppercase tracking-tighter text-amber-500 drop-shadow-md leading-none mt-1 ${
+                              (section?.name?.length || 0) > 14 
+                                ? 'text-lg sm:text-xl lg:text-2xl' 
+                                : (section?.name?.length || 0) >= 8 
+                                  ? 'text-xl sm:text-2xl lg:text-3xl' 
+                                  : 'text-2xl sm:text-3xl lg:text-4xl'
+                            }`}
+                          >
+                            {section?.name}
+                          </span>
+                        </div>
+                        <div className="mt-2 sm:mt-auto flex items-center gap-2 sm:gap-3">
+                          { (section?.countryIso2 || section?.code) && (
+                            <img
+                              src={section?.code === 'ENG' ? '/flags/england.png' : section?.code === 'SCO' ? '/flags/scotland.png' : `https://flagsapi.com/${(section?.countryIso2 || section?.code?.substring(0, 2))?.toUpperCase()}/flat/64.png`}
+                              alt={section.name}
+                              className="h-6 w-10 shrink-0 rounded object-cover drop-shadow-md sm:h-8 sm:w-12 lg:h-10 lg:w-14"
+                              onError={(e) => {
+                                if (e.currentTarget.src.includes('flagsapi.com')) {
+                                  e.currentTarget.src = getFlagUrl(section?.code || '', section?.countryIso2 || null, 160);
+                                } else {
+                                  e.currentTarget.style.display = 'none';
+                                }
+                              }}
+                            />
                           )}
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 sm:text-xs lg:text-sm leading-tight line-clamp-2">
+                            {FEDERATION_NAMES[section?.code || ''] || "National Football Association"}
+                          </span>
                         </div>
                       </div>
                     )}
-                    <PersonalStickerCard
-                      sticker={sticker}
-                      token={token!}
-                      userCollectionId={userCollectionId}
-                    />
-                  </Fragment>
-                ))}
-              </div>
-            </motion.div>
-          </AnimatePresence>
+                    {leftStickers.map((sticker) => (
+                      <PersonalStickerCard
+                        key={sticker.id}
+                        sticker={sticker}
+                        token={token!}
+                        userCollectionId={userCollectionId}
+                      />
+                    ))}
+                  </div>
+                </motion.div>
+
+                {/* RIGHT PAGE */}
+                <motion.div
+                  custom={direction}
+                  variants={rightPageVariants}
+                  style={{ transformOrigin: 'left center', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+                  className="w-full h-full relative"
+                >
+                  <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4 bg-zinc-900 p-4 sm:p-6 lg:p-8 border border-zinc-700/50 border-l-zinc-950/80 relative shadow-2xl h-full z-10">
+                    {/* Book spine shadow effect (Inside) */}
+                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10"></div>
+                    {/* Page edge effect (Outside) */}
+                    <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white/5 to-transparent pointer-events-none z-10 border-r border-zinc-600/30"></div>
+                    
+                    {rightStickers.map((sticker, index) => (
+                      <Fragment key={sticker.id}>
+                        {isNationalTeam && index === 7 && (
+                          <div className="col-span-1 flex aspect-[3/4] flex-col items-center justify-center p-2 text-center relative z-20">
+                            <span className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500 drop-shadow-sm">
+                              Group {teamIndex !== -1 ? String.fromCharCode(65 + groupIndex) : 'Info'}
+                            </span>
+                            <div className="grid w-full grid-cols-2 gap-2">
+                              {groupTeams.map((team) => (
+                                <div key={team.sectionId} className="flex w-full rounded-md border border-zinc-800/50 shadow-sm overflow-hidden" style={{ borderTopRightRadius: '0.75rem', borderBottomRightRadius: '0.25rem' }}>
+                                  {/* Left Strip (Black) */}
+                                  <div className="flex w-5 shrink-0 items-center justify-center bg-zinc-950 border-r border-zinc-800/50">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-200" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                                      {team.code}
+                                    </span>
+                                  </div>
+                                  {/* Right part (Flag) */}
+                                  <div className="flex-1 bg-zinc-900 flex">
+                                    <img
+                                      src={getFlagUrl(team.code, team.countryIso2, 160)}
+                                      alt={team.name}
+                                      className="w-full h-auto block object-cover opacity-90"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = 'none';
+                                        e.currentTarget.parentElement!.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-zinc-800/50 py-2"><span class="text-[8px] text-zinc-600">${team.code}</span></div>`;
+                                      }}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
+                              {groupTeams.length === 0 && (
+                                <div className="col-span-2 grid w-full grid-cols-2 gap-1 opacity-50 px-2">
+                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
+                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
+                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
+                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        <PersonalStickerCard
+                          sticker={sticker}
+                          token={token!}
+                          userCollectionId={userCollectionId}
+                        />
+                      </Fragment>
+                    ))}
+                  </div>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
         ) : (
           <StateMessage message={t('myCollections.noStickers')} />
         )}

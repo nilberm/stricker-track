@@ -83,6 +83,46 @@ export class UserCollectionsService {
     });
   }
 
+  async listPublic(locale: Locale) {
+    const userCollections = await this.prisma.userCollection.findMany({
+      where: { isPublic: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 50,
+      include: {
+        user: { select: { id: true, name: true } },
+        collection: {
+          include: {
+            translations: this.translationFilter(locale),
+            sections: { select: { _count: { select: { stickers: true } } } },
+          },
+        },
+        userStickers: { select: { quantity: true } },
+      },
+    });
+
+    return userCollections.map((entry) => {
+      const totalStickers =
+        entry.collection.sections?.reduce(
+          (sum, s) => sum + s._count.stickers,
+          0,
+        ) ?? 0;
+      return {
+        id: entry.id,
+        updatedAt: entry.updatedAt,
+        user: {
+          id: entry.user.id,
+          name: entry.user.name,
+        },
+        collection: {
+          id: entry.collection.id,
+          name: entry.collection.translations[0]?.name ?? entry.collection.slug,
+          totalStickers,
+        },
+        progress: calculateProgress(totalStickers, entry.userStickers),
+      };
+    });
+  }
+
   async find(userId: string, userCollectionId: string, locale: Locale) {
     const entry = await this.requireOwnedCollection(
       userId,
@@ -99,6 +139,70 @@ export class UserCollectionsService {
       id: entry.id,
       startedAt: entry.startedAt,
       updatedAt: entry.updatedAt,
+      isPublic: entry.isPublic,
+      collection: {
+        id: entry.collection.id,
+        slug: entry.collection.slug,
+        name: entry.collection.translations[0]?.name ?? entry.collection.slug,
+        description: entry.collection.translations[0]?.description ?? null,
+        totalStickers:
+          entry.collection.sections?.reduce(
+            (sum, s) => sum + s._count.stickers,
+            0,
+          ) ?? 0,
+        releaseYear: entry.collection.releaseYear,
+        codeConfig: {
+          pattern: entry.collection.codePattern,
+          example: entry.collection.codeExample,
+          prefixMinLength: entry.collection.codePrefixMinLength,
+          prefixMaxLength: entry.collection.codePrefixMaxLength,
+          numberMinLength: entry.collection.codeNumberMinLength,
+          numberMaxLength: entry.collection.codeNumberMaxLength,
+        },
+        knownCodePrefixes: knownCodePrefixes
+          .map(({ prefix }) => prefix)
+          .filter((prefix): prefix is string => Boolean(prefix)),
+      },
+    };
+  }
+
+  async findPublic(userCollectionId: string, locale: Locale) {
+    const entry = await this.prisma.userCollection.findUnique({
+      where: { id: userCollectionId, isPublic: true },
+      include: {
+        user: { select: { id: true, name: true } },
+        collection: {
+          include: {
+            translations: this.translationFilter(locale),
+            sections: { select: { _count: { select: { stickers: true } } } },
+          },
+        },
+      },
+    });
+
+    if (!entry) {
+      throw new NotFoundException({
+        code: 'USER_COLLECTION_NOT_FOUND',
+        message: 'Public user collection not found',
+      });
+    }
+
+    const knownCodePrefixes = await this.prisma.sticker.findMany({
+      where: { collectionId: entry.collectionId, prefix: { not: null } },
+      distinct: ['prefix'],
+      select: { prefix: true },
+      orderBy: { prefix: 'asc' },
+    });
+    
+    return {
+      id: entry.id,
+      startedAt: entry.startedAt,
+      updatedAt: entry.updatedAt,
+      isPublic: entry.isPublic,
+      user: {
+        id: entry.user.id,
+        name: entry.user.name,
+      },
       collection: {
         id: entry.collection.id,
         slug: entry.collection.slug,
@@ -218,6 +322,84 @@ export class UserCollectionsService {
     };
   }
 
+  async getMatch(
+    userId: string,
+    visitorCollectionId: string,
+    targetCollectionId: string,
+    locale: Locale,
+  ) {
+    const visitorEntry = await this.requireOwnedCollection(userId, visitorCollectionId, locale);
+    
+    // We don't require the target collection to be owned by the user, but it should be public.
+    const targetEntry = await this.prisma.userCollection.findUnique({
+      where: { id: targetCollectionId, isPublic: true },
+    });
+    
+    if (!targetEntry) {
+      throw new NotFoundException('Target collection not found or not public');
+    }
+
+    if (visitorEntry.collectionId !== targetEntry.collectionId) {
+      throw new BadRequestException('Cannot match different collections');
+    }
+
+    // Get all stickers with both users' quantities
+    const allStickers = await this.prisma.sticker.findMany({
+      where: { collectionId: visitorEntry.collectionId },
+      include: {
+        section: { include: { translations: this.translationFilter(locale) } },
+        player: true,
+        userStickers: {
+          where: { userCollectionId: { in: [visitorCollectionId, targetCollectionId] } },
+        },
+      },
+      orderBy: { albumOrder: 'asc' },
+    });
+
+    const visitorCanGive = [];
+    const targetCanGive = [];
+
+    for (const sticker of allStickers) {
+      const visitorRecord = sticker.userStickers.find(us => us.userCollectionId === visitorCollectionId);
+      const targetRecord = sticker.userStickers.find(us => us.userCollectionId === targetCollectionId);
+      
+      const visitorQty = visitorRecord?.quantity ?? 0;
+      const targetQty = targetRecord?.quantity ?? 0;
+      
+      const stickerInfo = {
+        id: sticker.id,
+        code: sticker.code,
+        name: sticker.name,
+        type: sticker.type,
+        albumOrder: sticker.albumOrder,
+        section: sticker.section ? {
+          id: sticker.section.id,
+          name: sticker.section.translations[0]?.name ?? sticker.section.code ?? '',
+        } : null,
+        player: sticker.player ? { name: sticker.player.name } : null,
+      };
+
+      if (visitorQty > 1 && targetQty === 0) {
+        visitorCanGive.push({
+          ...stickerInfo,
+          tradeWeight: visitorRecord?.tradeWeight ?? 1,
+        });
+      }
+
+      if (targetQty > 1 && visitorQty === 0) {
+        targetCanGive.push({
+          ...stickerInfo,
+          tradeWeight: targetRecord?.tradeWeight ?? 1,
+        });
+      }
+    }
+
+    return {
+      visitorCanGive,
+      targetCanGive,
+    };
+  }
+
   async listStickers(
     userId: string,
     userCollectionId: string,
@@ -321,6 +503,7 @@ export class UserCollectionsService {
           quantity,
           owned: quantity > 0,
           duplicateCount: Math.max(quantity - 1, 0),
+          tradeWeight: sticker.userStickers[0]?.tradeWeight ?? 1,
           section: sticker.section
             ? {
                 id: sticker.section.id,
@@ -420,6 +603,27 @@ export class UserCollectionsService {
     });
   }
 
+  setTradeWeight(
+    userId: string,
+    userCollectionId: string,
+    stickerId: string,
+    tradeWeight: number,
+  ) {
+    return this.prisma.$transaction(async (transaction) => {
+      await this.assertMutationAccess(
+        transaction,
+        userId,
+        userCollectionId,
+        stickerId,
+      );
+      const record = await transaction.userSticker.update({
+        where: { userCollectionId_stickerId: { userCollectionId, stickerId } },
+        data: { tradeWeight },
+      });
+      return { stickerId: record.stickerId, tradeWeight: record.tradeWeight };
+    });
+  }
+
   decrement(
     userId: string,
     userCollectionId: string,
@@ -470,6 +674,101 @@ export class UserCollectionsService {
 
   remove(userId: string, userCollectionId: string, stickerId: string) {
     return this.setQuantity(userId, userCollectionId, stickerId, 0);
+  }
+
+  async toggleVisibility(
+    userId: string,
+    userCollectionId: string,
+    isPublic: boolean,
+  ) {
+    const updated = await this.prisma.userCollection.update({
+      where: {
+        id: userCollectionId,
+        userId,
+      },
+      data: { isPublic },
+      select: { isPublic: true },
+    });
+    return updated;
+  }
+
+  async export(userId: string, userCollectionId: string) {
+    await this.requireOwnedCollection(userId, userCollectionId, 'en');
+    const ownedStickers = await this.prisma.userSticker.findMany({
+      where: { userCollectionId, quantity: { gt: 0 } },
+      include: { sticker: { select: { code: true, albumOrder: true } } },
+      orderBy: { sticker: { albumOrder: 'asc' } },
+    });
+    return { text: ownedStickers.map(s => `${s.quantity} ${s.sticker.code}`).join('\n') };
+  }
+
+  async bulkImport(userId: string, userCollectionId: string, textList: string) {
+    const entry = await this.requireOwnedCollection(userId, userCollectionId, 'en');
+    
+    const lines = textList.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const updates: { quantity: number; normalizedCode: string }[] = [];
+    
+    for (const line of lines) {
+      const match = line.match(/^(\d+)\s+(.+)$/);
+      if (match) {
+        const parsed = normalizeStickerCode(match[2]);
+        if (parsed) {
+          updates.push({
+            quantity: parseInt(match[1], 10),
+            normalizedCode: parsed,
+          });
+        }
+      }
+    }
+
+    if (updates.length === 0) {
+      return { imported: 0, totalLines: lines.length };
+    }
+
+    const stickers = await this.prisma.sticker.findMany({
+      where: { 
+        collectionId: entry.collectionId,
+        normalizedCode: { in: updates.map(u => u.normalizedCode) }
+      },
+      select: { id: true, normalizedCode: true },
+    });
+
+    const codeToId = new Map(stickers.map(s => [s.normalizedCode, s.id]));
+    
+    let importedCount = 0;
+    
+    await this.prisma.$transaction(async (tx) => {
+      const now = new Date();
+      for (const update of updates) {
+        const stickerId = codeToId.get(update.normalizedCode);
+        if (!stickerId) continue;
+        
+        importedCount++;
+        
+        if (update.quantity === 0) {
+          await tx.userSticker.deleteMany({
+            where: { userCollectionId, stickerId },
+          });
+        } else {
+          await tx.userSticker.upsert({
+            where: { userCollectionId_stickerId: { userCollectionId, stickerId } },
+            create: {
+              userCollectionId,
+              stickerId,
+              quantity: update.quantity,
+              firstAcquiredAt: now,
+              lastAcquiredAt: now,
+            },
+            update: {
+              quantity: update.quantity,
+              lastAcquiredAt: now,
+            }
+          });
+        }
+      }
+    });
+
+    return { imported: importedCount, totalLines: lines.length };
   }
 
   private async requireOwnedCollection(
