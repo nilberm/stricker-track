@@ -5,6 +5,7 @@ import {
   getUserCollectionProgress,
   listPersonalStickers,
   type PersonalStickerPage,
+  type QuantityResponse,
   toggleCollectionVisibility,
   listUserCollections,
   getCollectionMatch,

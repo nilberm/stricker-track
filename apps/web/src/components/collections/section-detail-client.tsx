@@ -79,7 +79,9 @@ const FEDERATION_PAGES: Record<string, number> = {
   ENG: 98, CRO: 100, GHA: 102, PAN: 104
 };
 
-const leftPageVariants = {
+import type { Variants } from 'framer-motion';
+
+const leftPageVariants: Variants = {
   enter: (direction: number) => ({
     rotateY: direction > 0 ? 90 : 0,
     zIndex: direction > 0 ? 10 : 1,
@@ -103,7 +105,7 @@ const leftPageVariants = {
   }),
 };
 
-const rightPageVariants = {
+const rightPageVariants: Variants = {
   enter: (direction: number) => ({
     rotateY: direction < 0 ? -90 : 0,
     zIndex: direction < 0 ? 10 : 1,
@@ -505,7 +507,7 @@ export function SectionDetailClient({
                                   {/* Right part (Flag) */}
                                   <div className="flex-1 bg-zinc-900 flex">
                                     <img
-                                      src={getFlagUrl(team.code, team.countryIso2, 160)}
+                                      src={getFlagUrl(team.code, team.countryIso2 ?? null, 160)}
                                       alt={team.name}
                                       className="w-full h-auto block object-cover opacity-90"
                                       onError={(e) => {
