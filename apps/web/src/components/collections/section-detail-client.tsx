@@ -368,7 +368,7 @@ export function SectionDetailClient({
                           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors group"
                         >
                           <img 
-                            src={getFlagUrl(s.code, s.countryIso2, 40)} 
+                            src={getFlagUrl(s.code, s.countryIso2 ?? null, 40)} 
                             className="w-6 h-auto rounded-sm opacity-80 group-hover:opacity-100" 
                             alt={s.code}
                             onError={(e) => e.currentTarget.style.display = 'none'}
