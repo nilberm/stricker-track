@@ -173,175 +173,179 @@ async function main() {
 
   const prisma = new PrismaClient();
   try {
-    await prisma.$transaction(
-      async (transaction) => {
-      for (const row of validRows) {
-        const collection = await transaction.collection.upsert({
-          where: { slug: row.collection_slug },
-          create: {
-            slug: row.collection_slug,
-            totalStickers: 0, // This should probably be updated later, but 0 is a safe default
+    for (const row of validRows) {
+      const collection = await prisma.collection.upsert({
+        where: { slug: row.collection_slug },
+        create: {
+          slug: row.collection_slug,
+          totalStickers: 0,
+          translations: {
+            create: [
+              { locale: SupportedLocale.PT_BR, name: row.collection_name_pt_br },
+              { locale: SupportedLocale.EN, name: row.collection_name_en },
+              { locale: SupportedLocale.ES, name: row.collection_name_es },
+            ].filter(t => t.name)
+          }
+        },
+        update: {}
+      });
+      let section = await prisma.collectionSection.findFirst({
+        where: { collectionId: collection.id, code: row.section_code },
+      });
+      if (!section) {
+        const lastSection = await prisma.collectionSection.aggregate({
+          where: { collectionId: collection.id },
+          _max: { order: true },
+        });
+        section = await prisma.collectionSection.create({
+          data: {
+            collectionId: collection.id,
+            code: row.section_code,
+            type: row.section_type as any,
+            countryIso2: row.country_iso2 || null,
+            order: (lastSection._max.order ?? 0) + 1,
             translations: {
               create: [
-                { locale: SupportedLocale.PT_BR, name: row.collection_name_pt_br },
-                { locale: SupportedLocale.EN, name: row.collection_name_en },
-                { locale: SupportedLocale.ES, name: row.collection_name_es },
+                { locale: SupportedLocale.PT_BR, name: row.section_name_pt_br },
+                { locale: SupportedLocale.EN, name: row.section_name_en },
+                { locale: SupportedLocale.ES, name: row.section_name_es },
               ].filter(t => t.name)
-            }
-          },
-          update: {}
-        });
-        let section = await transaction.collectionSection.findFirst({
-          where: { collectionId: collection.id, code: row.section_code },
-        });
-        if (!section) {
-          const lastSection = await transaction.collectionSection.aggregate({
-            where: { collectionId: collection.id },
-            _max: { order: true },
-          });
-          section = await transaction.collectionSection.create({
-            data: {
-              collectionId: collection.id,
-              code: row.section_code,
-              type: row.section_type as any,
-              countryIso2: row.country_iso2 || null,
-              order: (lastSection._max.order ?? 0) + 1,
-              translations: {
-                create: [
-                  { locale: SupportedLocale.PT_BR, name: row.section_name_pt_br },
-                  { locale: SupportedLocale.EN, name: row.section_name_en },
-                  { locale: SupportedLocale.ES, name: row.section_name_es },
-                ].filter(t => t.name)
-              },
             },
-          });
-          report.created.sections += 1;
-        } else {
-          // Update the section if it already exists to ensure it has type and countryIso2
-          section = await transaction.collectionSection.update({
-            where: { id: section.id },
-            data: {
-              type: row.section_type as any,
-              countryIso2: row.country_iso2 || null,
-            }
-          });
-          // Update section translations manually here to fix the incorrect ones from previous import
-          for (const locale of Object.values(SupportedLocale)) {
-            const localeName = locale === SupportedLocale.PT_BR ? row.section_name_pt_br : locale === SupportedLocale.EN ? row.section_name_en : row.section_name_es;
-            if (!localeName) continue;
-            const existing = await transaction.collectionSectionTranslation.findFirst({ where: { sectionId: section.id, locale } });
-            if (existing) {
-              await transaction.collectionSectionTranslation.update({
-                where: { id: existing.id },
-                data: { name: localeName }
-              });
-            } else {
-              await transaction.collectionSectionTranslation.create({
-                data: { sectionId: section.id, locale, name: localeName }
-              });
-            }
+          },
+        });
+        report.created.sections += 1;
+      } else {
+        section = await prisma.collectionSection.update({
+          where: { id: section.id },
+          data: {
+            type: row.section_type as any,
+            countryIso2: row.country_iso2 || null,
+          }
+        });
+        for (const locale of Object.values(SupportedLocale)) {
+          const localeName = locale === SupportedLocale.PT_BR ? row.section_name_pt_br : locale === SupportedLocale.EN ? row.section_name_en : row.section_name_es;
+          if (!localeName) continue;
+          const existing = await prisma.collectionSectionTranslation.findFirst({ where: { sectionId: section.id, locale } });
+          if (existing) {
+            await prisma.collectionSectionTranslation.update({
+              where: { id: existing.id },
+              data: { name: localeName }
+            });
+          } else {
+            await prisma.collectionSectionTranslation.create({
+              data: { sectionId: section.id, locale, name: localeName }
+            });
           }
         }
-
-        let playerId: string | undefined;
-        if (row.player_name) {
-          const normalizedName = normalizeName(row.player_name);
-          const existingPlayer = row.wikidata_id
-            ? await transaction.player.findUnique({
-                where: { wikidataId: row.wikidata_id },
-                select: { id: true },
-              })
-            : await transaction.player.findFirst({
-                where: {
-                  normalizedName,
-                  countryCode: row.country_iso2 || null,
-                },
-                select: { id: true },
-              });
-          const player = row.wikidata_id
-            ? await transaction.player.upsert({
-                where: { wikidataId: row.wikidata_id },
-                update: {
-                  name: row.player_name,
-                  normalizedName,
-                  countryCode: row.country_iso2 || undefined,
-                },
-                create: {
-                  name: row.player_name,
-                  normalizedName,
-                  countryCode: row.country_iso2 || undefined,
-                  wikidataId: row.wikidata_id,
-                },
-              })
-            : ((await transaction.player.findFirst({
-                where: {
-                  normalizedName,
-                  countryCode: row.country_iso2 || null,
-                },
-              })) ??
-              (await transaction.player.create({
-                data: {
-                  name: row.player_name,
-                  normalizedName,
-                  countryCode: row.country_iso2 || undefined,
-                },
-              })));
-          playerId = player.id;
-          if (existingPlayer) report.updated.players += 1;
-          else report.created.players += 1;
-        }
-
-        const match = row.normalizedCode.match(/^([A-Z]+)(\d+)$/);
-        const prefix = match ? match[1] : null;
-        const number = match ? Number(match[2]) : (row.normalizedCode === '00' ? 0 : null);
-
-        const existing = await transaction.sticker.findUnique({
-          where: {
-            collectionId_normalizedCode: {
-              collectionId: collection.id,
-              normalizedCode: row.normalizedCode,
-            },
-          },
-          select: { id: true },
-        });
-        await transaction.sticker.upsert({
-          where: {
-            collectionId_normalizedCode: {
-              collectionId: collection.id,
-              normalizedCode: row.normalizedCode,
-            },
-          },
-          update: {
-            sectionId: section.id,
-            playerId,
-            code: row.sticker_code,
-            name: row.sticker_name_pt_br,
-            type: row.stickerType,
-            albumOrder: row.orderNumber,
-            sectionOrder: row.sectionOrderNumber,
-            prefix,
-            number,
-          },
-          create: {
-            collectionId: collection.id,
-            sectionId: section.id,
-            playerId,
-            code: row.sticker_code,
-            normalizedCode: row.normalizedCode,
-            prefix,
-            number,
-            name: row.sticker_name_pt_br,
-            type: row.stickerType,
-            albumOrder: row.orderNumber,
-            sectionOrder: row.sectionOrderNumber,
-          },
-        });
-        if (existing) report.updated.stickers += 1;
-        else report.created.stickers += 1;
       }
-    },
-    { timeout: 30000 }
-    );
+
+      let playerId: string | undefined;
+      if (row.player_name) {
+        const normalizedName = normalizeName(row.player_name);
+        const existingPlayer = row.wikidata_id
+          ? await prisma.player.findUnique({
+              where: { wikidataId: row.wikidata_id },
+              select: { id: true },
+            })
+          : await prisma.player.findFirst({
+              where: {
+                normalizedName,
+                countryCode: row.country_iso2 || null,
+              },
+              select: { id: true },
+            });
+        const player = row.wikidata_id
+          ? await prisma.player.upsert({
+              where: { wikidataId: row.wikidata_id },
+              update: {
+                name: row.player_name,
+                normalizedName,
+                countryCode: row.country_iso2 || undefined,
+              },
+              create: {
+                name: row.player_name,
+                normalizedName,
+                countryCode: row.country_iso2 || undefined,
+                wikidataId: row.wikidata_id,
+              },
+            })
+          : ((await prisma.player.findFirst({
+              where: {
+                normalizedName,
+                countryCode: row.country_iso2 || null,
+              },
+            })) ??
+            (await prisma.player.create({
+              data: {
+                name: row.player_name,
+                normalizedName,
+                countryCode: row.country_iso2 || undefined,
+              },
+            })));
+        playerId = player.id;
+        if (existingPlayer) report.updated.players += 1;
+        else report.created.players += 1;
+      }
+
+      const match = row.normalizedCode.match(/^([A-Z]+)(\d+)$/);
+      const prefix = match ? match[1] : null;
+      const number = match ? Number(match[2]) : (row.normalizedCode === '00' ? 0 : null);
+
+      const existing = await prisma.sticker.findUnique({
+        where: {
+          collectionId_normalizedCode: {
+            collectionId: collection.id,
+            normalizedCode: row.normalizedCode,
+          },
+        },
+        select: { id: true },
+      });
+      await prisma.sticker.upsert({
+        where: {
+          collectionId_normalizedCode: {
+            collectionId: collection.id,
+            normalizedCode: row.normalizedCode,
+          },
+        },
+        update: {
+          sectionId: section.id,
+          playerId,
+          code: row.sticker_code,
+          name: row.sticker_name_pt_br,
+          type: row.stickerType,
+          albumOrder: row.orderNumber,
+          sectionOrder: row.sectionOrderNumber,
+          prefix,
+          number,
+        },
+        create: {
+          collectionId: collection.id,
+          sectionId: section.id,
+          playerId,
+          code: row.sticker_code,
+          normalizedCode: row.normalizedCode,
+          prefix,
+          number,
+          name: row.sticker_name_pt_br,
+          type: row.stickerType,
+          albumOrder: row.orderNumber,
+          sectionOrder: row.sectionOrderNumber,
+        },
+      });
+      if (existing) report.updated.stickers += 1;
+      else report.created.stickers += 1;
+    }
+    
+    // Now update totalStickers to match the count of created stickers
+    const collections = await prisma.collection.findMany();
+    for (const coll of collections) {
+      const count = await prisma.sticker.count({ where: { collectionId: coll.id } });
+      await prisma.collection.update({
+        where: { id: coll.id },
+        data: { totalStickers: count }
+      });
+    }
+
     console.log(JSON.stringify(report, null, 2));
   } finally {
     await prisma.$disconnect();
