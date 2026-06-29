@@ -28,7 +28,7 @@ export function StartCollectionButton({
 
   return (
     <button
-      className="rounded-xl bg-emerald-600 px-5 py-3 text-center font-bold text-white hover:bg-emerald-700 disabled:opacity-60"
+      className="block w-full bg-emerald-400 px-5 py-3 text-center font-black uppercase tracking-wider text-zinc-900 transition-colors hover:bg-emerald-300 disabled:bg-zinc-300 disabled:text-zinc-500"
       disabled={mutation.isPending}
       onClick={() => mutation.mutate()}
       type="button"

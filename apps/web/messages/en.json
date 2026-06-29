@@ -410,6 +410,9 @@
       "import": "Import collection",
       "export": "Export collection",
       "group": "Group {name}"
+    },
+    "sections": {
+      "fwc": "Specials"
     }
   },
   "transferModal": {
@@ -459,5 +462,34 @@
   "overview": {
     "searchPlaceholder": "Search section (e.g., BRA)",
     "searchAria": "Filter by Code"
+  },
+  "stickerCard": {
+    "types": {
+      "PLAYER": "Player",
+      "BADGE": "Badge",
+      "TEAM": "Team",
+      "OTHER": "Sticker"
+    },
+    "controls": {
+      "removeCard": "Remove card from album",
+      "manageDuplicates": "Manage duplicates",
+      "deleteCard": "Delete Card",
+      "done": "Done",
+      "cancel": "Cancel",
+      "confirmDeleteAll": "Yes, Delete All"
+    },
+    "modal": {
+      "duplicatesOf": "Duplicates of",
+      "trackCopies": "Track how many extra copies you have for swapping.",
+      "extraCopies": "Extra Copies"
+    },
+    "badge": {
+      "oneCopy": "1 COPY",
+      "copies": "{quantity} COPIES"
+    },
+    "alert": {
+      "title": "Warning!",
+      "warningText": "You are about to delete <bold>ALL {quantity} COPIES</bold> of sticker <highlight>{code}</highlight>. Are you sure?"
+    }
   }
 }

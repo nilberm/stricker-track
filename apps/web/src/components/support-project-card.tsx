@@ -24,8 +24,8 @@ export function SupportProjectCard({ compact = false }: { compact?: boolean }) {
     <section
       className={
         compact
-          ? 'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'
-          : 'rounded-2xl border border-amber-200 bg-amber-50/70 p-5'
+          ? 'flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between rounded-xl border border-zinc-800 bg-zinc-900 p-5 shadow-inner'
+          : 'border-4 border-zinc-900 bg-emerald-300 p-5 shadow-[4px_4px_0px_#18181b]'
       }
     >
       <div>

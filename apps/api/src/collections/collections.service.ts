@@ -22,6 +22,8 @@ type LocalizedCollection = Collection & {
   translations: Array<{ name: string; description: string | null }>;
   sections?: Array<{ _count: { stickers: number } }>;
   _count?: { sections: number };
+  categoryId?: string;
+  series?: string | null;
 };
 
 type LocalizedSection = CollectionSection & {
@@ -268,6 +270,8 @@ export class CollectionsService {
         collection.sections?.reduce((sum, s) => sum + s._count.stickers, 0) ??
         0,
       codeExample: collection.codeExample,
+      categoryId: collection.categoryId,
+      series: collection.series,
     };
   }
 

@@ -8,10 +8,10 @@ import { locales, type Locale } from '../i18n/config';
 
 import { useState, useRef, useEffect } from 'react';
 
-const localeConfig: Record<Locale, { label: string, flag: string }> = {
-  'pt-BR': { label: 'PT', flag: 'br' },
-  en: { label: 'EN', flag: 'us' },
-  es: { label: 'ES', flag: 'es' },
+const localeConfig: Record<Locale, { label: string, flag: string, activeBg: string, activeText: string }> = {
+  'pt-BR': { label: 'PT', flag: 'br', activeBg: 'bg-emerald-400', activeText: 'text-zinc-900' },
+  en: { label: 'EN', flag: 'us', activeBg: 'bg-red-500', activeText: 'text-white' },
+  es: { label: 'ES', flag: 'es', activeBg: 'bg-yellow-400', activeText: 'text-zinc-900' },
 };
 
 export function LanguageSwitcher() {
@@ -67,36 +67,38 @@ export function LanguageSwitcher() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={t('common.language')}
-        className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-2 py-1.5 text-[11px] font-bold tracking-widest text-amber-500/80 outline-none transition hover:bg-zinc-800 hover:text-amber-400 focus:border-amber-900/50"
+        className="flex h-10 items-center gap-2 border-2 border-zinc-900 bg-zinc-200 px-3 text-xs font-black tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] focus:outline-none"
       >
         <img 
           src={`https://flagcdn.com/w20/${currentConfig.flag}.png`} 
           alt={currentConfig.label} 
-          className="h-3 w-4 object-cover rounded-[1px] opacity-80" 
+          className="h-3 w-4 border border-zinc-900 object-cover" 
         />
         <span>{currentConfig.label}</span>
-        <svg className={`h-3 w-3 fill-current transition-transform ${isOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20">
+        <svg className={`h-3 w-3 fill-current transition-all ${isOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20">
           <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
         </svg>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-28 rounded-xl border border-zinc-800 bg-zinc-900 py-1 shadow-xl shadow-black/50 z-50">
-          {locales.map((supportedLocale: Locale) => {
+        <div className="absolute right-0 mt-3 w-28 border-2 border-zinc-900 bg-white shadow-[6px_6px_0px_#18181b] z-50 flex flex-col overflow-hidden">
+          {locales.map((supportedLocale: Locale, index) => {
             const config = localeConfig[supportedLocale];
             const isSelected = supportedLocale === locale;
             return (
               <button
                 key={supportedLocale}
                 onClick={() => handleSelect(supportedLocale)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[11px] font-bold tracking-widest transition hover:bg-zinc-800 ${
-                  isSelected ? 'text-amber-500 bg-zinc-800/50' : 'text-zinc-400 hover:text-amber-400'
+                className={`group flex w-full items-center gap-2 px-3 py-3 text-left text-xs font-black tracking-widest transition ${
+                  index !== 0 ? 'border-t-2 border-zinc-900' : ''
+                } ${
+                  isSelected ? `${config.activeBg} ${config.activeText}` : 'bg-white text-zinc-900 hover:bg-zinc-200'
                 }`}
               >
                 <img 
                   src={`https://flagcdn.com/w20/${config.flag}.png`} 
                   alt={config.label} 
-                  className={`h-3 w-4 object-cover rounded-[1px] ${isSelected ? 'opacity-100' : 'opacity-60'}`} 
+                  className={`h-3 w-4 border border-zinc-900 object-cover transition-all group-hover:scale-110 ${isSelected ? 'opacity-100 shadow-[2px_2px_0px_rgba(0,0,0,0.5)]' : 'opacity-100'}`} 
                 />
                 {config.label}
               </button>

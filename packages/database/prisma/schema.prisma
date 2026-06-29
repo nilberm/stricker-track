@@ -36,6 +36,14 @@ enum CollectionStatus {
   ARCHIVED
 }
 
+enum CollectionCategory {
+  SPORTS
+  TCG_POKEMON
+  TCG_MAGIC
+  CUSTOM
+  OTHER
+}
+
 enum SectionType {
   NATIONAL_TEAM
   INTRODUCTION
@@ -142,6 +150,8 @@ model EmailVerificationToken {
 model Collection {
   id                  String                  @id @default(uuid()) @db.Uuid
   slug                String                  @unique
+  categoryId          CollectionCategory      @default(SPORTS)
+  series              String?
   releaseYear         Int?
   publisherName       String?
   totalStickers       Int

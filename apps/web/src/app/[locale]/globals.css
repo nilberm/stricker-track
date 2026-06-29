@@ -1,7 +1,12 @@
 @import 'tailwindcss';
 
+@theme {
+  --font-teko: var(--font-teko);
+  --font-truly: var(--font-truly);
+}
+
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 * {
@@ -10,19 +15,89 @@
 
 body {
   margin: 0;
-  /* Dark textured background with radial gradient spotlight */
-  background-color: #09090b; /* zinc-950 */
+  background-color: #fafafa; /* zinc-50 */
   background-image: 
-    radial-gradient(ellipse at top, rgba(39, 39, 42, 0.8) 0%, rgba(9, 9, 11, 1) 70%),
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
   background-attachment: fixed;
-  color: #e2e8f0; /* slate-200 */
+  color: #18181b; /* zinc-900 */
   font-family: Arial, Helvetica, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
+}
+
+@utility bg-striped-colorful {
+  background-image: repeating-linear-gradient(
+    to right,
+    #facc15,
+    #facc15 40px,
+    #ef4444 40px,
+    #ef4444 80px,
+    #14b8a6 80px,
+    #14b8a6 120px
+  );
+}
+
+@utility bg-world-cup-stripes {
+  background-image: linear-gradient(
+    to right,
+    #7b4198 0%, 
+    #7b4198 20%,
+    #e32221 20%, 
+    #e32221 40%,
+    #f26b24 40%, 
+    #f26b24 60%,
+    #c4d600 60%, 
+    #c4d600 80%,
+    #8ac7e8 80%, 
+    #8ac7e8 100%
+  );
 }
 
 button,
 select,
 input {
   font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* 
+  Global Scrollbar Styling (Retro/Chunky)
+  Targeting ONLY html/body to prevent affecting internal component scrollbars.
+*/
+html {
+  scrollbar-width: auto;
+  scrollbar-color: #fbbf24 #fafafa;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background-color: #fafafa;
+  border-left: 2px solid #18181b;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background-color: #fbbf24;
+  border: 2px solid #18181b;
+  border-radius: 0;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background-color: #ef4444;
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner {
+  background-color: #fafafa;
+  border-left: 2px solid #18181b;
+  border-top: 2px solid #18181b;
 }

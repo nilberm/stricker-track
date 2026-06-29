@@ -25,7 +25,7 @@ export function SupportProjectButton({
   return (
     <a
       aria-label={t('buttonAriaLabel')}
-      className={`inline-flex items-center justify-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-bold text-amber-950 transition hover:border-amber-400 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 ${className}`}
+      className={`inline-flex items-center justify-center border-2 border-zinc-900 bg-amber-400 px-4 py-2.5 text-sm font-black uppercase tracking-widest text-zinc-900 shadow-[2px_2px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#18181b] focus-visible:outline-none ${className}`}
       href={url}
       rel="noopener noreferrer"
       target="_blank"

@@ -6,15 +6,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 import { CollectionsService } from './collections.service';
 import { ListStickersDto } from './dto/list-stickers.dto';
 import { LocaleQueryDto } from './dto/locale-query.dto';
 
 @ApiTags('collections')
-@ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @Controller('collections')
 export class CollectionsController {
   constructor(private readonly collections: CollectionsService) {}

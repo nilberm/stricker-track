@@ -130,14 +130,14 @@ export function AuthForm({ mode }: AuthFormProps) {
         type="password"
       />
       {mode === 'register' && (
-        <label className="block space-y-2 text-sm font-semibold text-slate-300">
+        <label className="block space-y-2 text-sm font-black uppercase tracking-widest text-zinc-900">
           <span>{t('auth.preferredLanguage')}</span>
           <select
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-slate-100 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+            className="w-full border-2 border-zinc-900 bg-white px-4 py-3 text-zinc-900 font-bold outline-none transition-all focus:shadow-[4px_4px_0px_#18181b] focus:-translate-y-0.5"
             {...register('preferredLocale')}
           >
             {locales.map((supportedLocale: Locale) => (
-              <option key={supportedLocale} value={supportedLocale} className="bg-zinc-900 text-slate-100">
+              <option key={supportedLocale} value={supportedLocale} className="bg-white text-zinc-900 font-bold">
                 {t(`languages.${supportedLocale}`)}
               </option>
             ))}
@@ -145,17 +145,17 @@ export function AuthForm({ mode }: AuthFormProps) {
         </label>
       )}
       {translatedServerError && (
-        <p className="rounded-xl border border-red-900/50 bg-red-950/30 p-3 text-sm text-red-400">
+        <p className="border-2 border-red-600 bg-red-100 p-3 text-sm font-bold uppercase tracking-wide text-red-700 shadow-[4px_4px_0px_#dc2626]">
           {translatedServerError}
         </p>
       )}
       {success && (
-        <p className="rounded-xl border border-emerald-900/50 bg-emerald-950/30 p-3 text-sm text-emerald-400">
+        <p className="border-2 border-emerald-600 bg-emerald-100 p-3 text-sm font-bold uppercase tracking-wide text-emerald-700 shadow-[4px_4px_0px_#059669]">
           {t(`auth.${mode}Success`)}
         </p>
       )}
       <button
-        className="w-full rounded-xl bg-amber-600 px-4 py-3 font-bold text-amber-950 shadow transition hover:bg-amber-500 disabled:opacity-60"
+        className="mt-6 w-full border-2 border-zinc-900 bg-amber-400 px-4 py-4 font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] hover:bg-amber-300 disabled:opacity-60 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_#18181b]"
         disabled={isSubmitting}
         type="submit"
       >
@@ -174,14 +174,14 @@ type FieldProps = {
 
 function Field({ error, label, registration, type }: FieldProps) {
   return (
-    <label className="block space-y-2 text-sm font-semibold text-slate-300">
+    <label className="block space-y-2 text-sm font-black uppercase tracking-widest text-zinc-900">
       <span>{label}</span>
       <input
-        className="w-full rounded-xl border border-zinc-800 bg-zinc-950/50 px-4 py-3 text-slate-100 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20"
+        className="w-full border-2 border-zinc-900 bg-white px-4 py-3 text-zinc-900 font-bold outline-none transition-all placeholder:text-zinc-500 focus:shadow-[4px_4px_0px_#18181b] focus:-translate-y-0.5"
         type={type}
         {...registration}
       />
-      {error && <span className="block text-sm text-red-400">{error}</span>}
+      {error && <span className="block text-xs text-red-600 bg-red-100 border border-red-600 p-2 uppercase font-bold tracking-wider mt-1">{error}</span>}
     </label>
   );
 }

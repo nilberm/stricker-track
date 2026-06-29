@@ -12,6 +12,19 @@ import { QueryProvider } from '../../components/query-provider';
 import type { Locale } from '../../i18n/config';
 import { routing } from '../../i18n/routing';
 import './globals.css';
+import localFont from 'next/font/local';
+import { Teko } from 'next/font/google';
+
+const teko = Teko({
+  subsets: ['latin'],
+  weight: ['400', '600', '700'],
+  variable: '--font-teko',
+});
+
+const truly = localFont({
+  src: '../fonts/truly-26.otf',
+  variable: '--font-truly',
+});
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -55,7 +68,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps) {
 
   return (
     <html lang={locale}>
-      <body className="min-h-screen">
+      <body className={`min-h-screen ${teko.variable} ${truly.variable}`}>
         <NextIntlClientProvider messages={messages}>
           <QueryProvider>
             <div className="flex min-h-screen flex-col">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
+import { Suspense } from 'react';
 import { useEffect, useState, useRef } from 'react';
 import { Link, useRouter } from '../i18n/navigation';
 import { accessTokenKey, authStateEvent, notifyAuthStateChanged } from '../lib/auth';
@@ -40,23 +41,24 @@ function AvatarDropdown({ user }: { user: AuthUser }) {
     <div className="relative" ref={dropdownRef}>
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 font-black text-amber-950 shadow-md shadow-black/30 transition hover:scale-105 hover:bg-amber-500 hover:shadow-amber-500/20"
+        className="flex h-10 w-10 items-center justify-center border-2 border-zinc-900 bg-amber-400 font-black text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
       >
         {initial}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 rounded-xl border border-zinc-700 bg-zinc-800 py-1 shadow-xl z-50">
+        <div className="absolute right-0 mt-3 w-48 border-2 border-zinc-900 bg-white shadow-[6px_6px_0px_#18181b] z-50">
           <Link
             href="/profile"
-            className="block w-full px-4 py-2 text-left text-sm font-semibold text-slate-300 transition hover:bg-zinc-700 hover:text-white"
+            className="block w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-zinc-900 transition hover:bg-zinc-200"
             onClick={() => setIsOpen(false)}
           >
             {tNav('profile')}
           </Link>
+          <div className="border-t-2 border-zinc-900"></div>
           <button
             onClick={handleLogout}
-            className="block w-full px-4 py-2 text-left text-sm font-semibold text-red-400 transition hover:bg-zinc-700 hover:text-red-300"
+            className="block w-full px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-red-600 transition hover:bg-red-100"
           >
             {tProfile('signOut')}
           </button>
@@ -102,13 +104,13 @@ export function HeaderNavigation() {
       {isAuthenticated === true ? (
         <>
           <Link
-            className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
-            href="/dashboard"
+            className="hidden sm:flex items-center h-10 border-2 border-zinc-900 bg-red-500 px-4 text-xs font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
+            href="/"
           >
-            {t('navigation.dashboard')}
+            Hub
           </Link>
           <Link
-            className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
+            className="hidden sm:flex items-center h-10 border-2 border-zinc-900 bg-white px-4 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
             href="/my-collections"
           >
             {t('navigation.myCollections')}
@@ -116,13 +118,13 @@ export function HeaderNavigation() {
           {user?.role === 'ADMIN' ? (
             <>
               <Link
-                className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
+                className="hidden sm:flex items-center h-10 border-2 border-zinc-900 bg-white px-4 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
                 href="/community"
               >
                 {t('community.title')}
               </Link>
               <Link
-                className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-amber-500 sm:block"
+                className="hidden sm:flex items-center h-10 border-2 border-zinc-900 bg-white px-4 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
                 href="/admin/players"
               >
                 {t('admin.players')}
@@ -134,20 +136,22 @@ export function HeaderNavigation() {
       ) : isAuthenticated === false ? (
         <>
           <Link
-            className="hidden text-[11px] font-bold uppercase tracking-widest text-zinc-400 transition hover:text-zinc-100 sm:block"
+            className="hidden sm:flex items-center h-10 border-2 border-zinc-900 bg-white px-4 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
             href="/login"
           >
             {t('navigation.login')}
           </Link>
           <Link
-            className="hidden rounded-xl bg-amber-600 px-4 py-2 text-[11px] font-bold uppercase tracking-widest text-amber-950 shadow transition hover:bg-amber-500 sm:block"
+            className="hidden sm:flex items-center h-10 border-2 border-zinc-900 bg-amber-400 px-4 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
             href="/register"
           >
             {t('navigation.register')}
           </Link>
         </>
       ) : null}
-      <LanguageSwitcher />
+      <Suspense fallback={<div className="w-12 h-10 bg-zinc-200 border-2 border-zinc-900 animate-pulse" />}>
+        <LanguageSwitcher />
+      </Suspense>
     </nav>
   );
 }

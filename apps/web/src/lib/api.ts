@@ -22,7 +22,9 @@ export async function apiRequest<T>(
     if (response.status === 401 && typeof window !== 'undefined') {
       window.localStorage.removeItem('sticker-track-access-token');
       window.dispatchEvent(new Event('sticker-track-auth-state'));
-      if (!window.location.pathname.includes('/login')) {
+      
+      const isPublicEndpoint = path.startsWith('/collections') && !path.includes('/user-collections');
+      if (!isPublicEndpoint && !window.location.pathname.includes('/login')) {
         window.location.href = '/login';
       }
     }

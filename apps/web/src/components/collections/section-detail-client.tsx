@@ -7,11 +7,13 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter, Link } from '../../i18n/navigation';
 import { accessTokenKey } from '../../lib/auth';
 import type { Locale } from '../../i18n/config';
-import { usePersonalCollectionProgress, usePersonalStickers } from '../../hooks/use-personal-collection';
+import { usePersonalCollectionProgress, usePersonalStickers, usePersonalCollection } from '../../hooks/use-personal-collection';
 import { PersonalStickerCard } from './cards/personal-sticker-card';
 import { listPersonalStickers } from '../../lib/personal-collections';
 import type { PersonalStickerPage } from '../../lib/personal-collections';
 import { Search } from 'lucide-react';
+import { useThemeStore } from '../../stores/theme-store';
+import { WorldCupSectionDetail } from './themes/world-cup/world-cup-section-detail';
 
 const FEDERATION_NAMES: Record<string, string> = {
   MEX: "Federación Mexicana de Fútbol",
@@ -146,7 +148,52 @@ function getFlagUrl(sectionCode: string, iso2: string | null, width: 40 | 160 = 
   return `https://flagcdn.com/w${width}/${(iso2 || sectionCode.substring(0, 2)).toLowerCase()}.png`;
 }
 
+
+
 export function SectionDetailClient({
+  userCollectionId,
+  sectionId,
+}: {
+  userCollectionId: string;
+  sectionId: string;
+}) {
+  const locale = useLocale() as Locale;
+  const router = useRouter();
+  const token = typeof window === 'undefined' ? null : window.localStorage.getItem(accessTokenKey);
+  const detail = usePersonalCollection(userCollectionId, locale, token);
+  const setTheme = useThemeStore(s => s.setTheme);
+
+  useEffect(() => {
+    if (detail.data?.collection.slug) {
+      setTheme(detail.data.collection.slug);
+    }
+    return () => setTheme('default');
+  }, [detail.data?.collection.slug, setTheme]);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !token) {
+      router.replace('/login');
+    }
+  }, [token, router]);
+
+  if (!token) {
+    return null;
+  }
+
+  if (detail.isLoading) {
+    return null;
+  }
+
+  const theme = detail.data?.collection.slug;
+
+  if (theme === 'world-cup-2026') {
+    return <WorldCupSectionDetail userCollectionId={userCollectionId} sectionId={sectionId} />;
+  }
+
+  return <BetaSectionDetail userCollectionId={userCollectionId} sectionId={sectionId} />;
+}
+
+function BetaSectionDetail({
   userCollectionId,
   sectionId: initialSectionId,
 }: {
@@ -228,8 +275,13 @@ export function SectionDetailClient({
     }
   }, [prevSectionId, nextSectionId, locale, userCollectionId, token, queryClient]);
 
-  if (!token && typeof window !== 'undefined') {
-    router.replace('/login');
+  useEffect(() => {
+    if (typeof window !== 'undefined' && !token) {
+      router.replace('/login');
+    }
+  }, [token, router]);
+
+  if (!token) {
     return null;
   }
 
@@ -268,7 +320,7 @@ export function SectionDetailClient({
       {prevSectionId && (
         <button
           onClick={() => handleNavigate(prevSectionId)}
-          className="fixed left-2 top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/90 text-amber-500 shadow-lg transition-transform hover:scale-110 hover:bg-zinc-800 lg:left-8 lg:h-16 lg:w-16"
+          className="fixed left-2 top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center border-2 border-zinc-900 bg-white text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] lg:left-8 lg:h-16 lg:w-16"
         >
           <svg className="h-6 w-6 lg:h-8 lg:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7"/></svg>
         </button>
@@ -276,7 +328,7 @@ export function SectionDetailClient({
       {nextSectionId && (
         <button
           onClick={() => handleNavigate(nextSectionId)}
-          className="fixed right-2 top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/90 text-amber-500 shadow-lg transition-transform hover:scale-110 hover:bg-zinc-800 lg:right-8 lg:h-16 lg:w-16"
+          className="fixed right-2 top-1/2 z-50 flex h-12 w-12 -translate-y-1/2 items-center justify-center border-2 border-zinc-900 bg-white text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] lg:right-8 lg:h-16 lg:w-16"
         >
           <svg className="h-6 w-6 lg:h-8 lg:w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7"/></svg>
         </button>
@@ -284,25 +336,25 @@ export function SectionDetailClient({
 
       {/* Header and tools (Visible on mobile, absolute top on desktop if needed, or hidden if taking too much space) */}
       <div className="mb-6 lg:hidden">
-        <nav className="mb-4 flex items-center gap-2 text-sm font-bold text-zinc-500">
-          <Link className="text-amber-500 hover:underline" href={`/my-collections/${userCollectionId}`}>
+        <nav className="mb-4 flex items-center gap-2 text-sm font-black text-zinc-900 uppercase tracking-widest">
+          <Link className="hover:underline" href={`/my-collections/${userCollectionId}`}>
             ← {t('common.backCollection')}
           </Link>
         </nav>
         <header className="mb-6 flex flex-col gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-amber-500 drop-shadow-md">
+            <h1 className="text-3xl font-black uppercase tracking-tight text-zinc-900 drop-shadow-[2px_2px_0px_#14b8a6]">
               {section?.name ?? t('common.loading')}
             </h1>
-            <p className="text-sm font-bold tracking-widest text-zinc-400 uppercase">
+            <p className="text-sm font-black tracking-widest text-zinc-500 uppercase mt-1">
               {section && t(`sectionTypes.${section.type}`)}
             </p>
           </div>
           {section && (
-            <div className="flex items-center gap-4 rounded-xl border border-zinc-700 bg-zinc-800/80 p-3 shadow-inner">
-              <span className="font-black text-amber-500 text-lg">{section.percentage}%</span>
-              <div className="h-2 flex-1 overflow-hidden rounded-full border border-zinc-800 bg-zinc-950 shadow-inner">
-                <div className="h-full bg-gradient-to-r from-amber-600 to-amber-400" style={{ width: `${section.percentage}%` }} />
+            <div className="flex items-center gap-4 border-2 border-zinc-900 bg-white p-3 shadow-[4px_4px_0px_#18181b]">
+              <span className="font-black text-zinc-900 text-lg">{section.percentage}%</span>
+              <div className="h-3 flex-1 overflow-hidden border-2 border-zinc-900 bg-zinc-200">
+                <div className="h-full bg-amber-400 border-r-2 border-zinc-900" style={{ width: `${section.percentage}%` }} />
               </div>
             </div>
           )}
@@ -313,18 +365,18 @@ export function SectionDetailClient({
             placeholder={t('catalog.searchPlaceholder')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="rounded-xl border border-zinc-700 bg-zinc-900/80 px-4 py-2 text-zinc-200 placeholder-zinc-500 focus:border-amber-500 focus:outline-none"
+            className="border-4 border-zinc-900 bg-emerald-300 px-4 py-3 font-black text-zinc-900 placeholder:text-zinc-700 focus:bg-emerald-400 focus:outline-none shadow-[4px_4px_0px_#18181b] uppercase"
           />
         </div>
       </div>
 
       <div className="w-full lg:px-24 flex flex-col">
         {/* Desktop Header: Back Button, Search Bar & Page Number */}
-        <div className="hidden lg:flex items-center justify-between mb-6 z-50">
+        <div className="hidden lg:flex items-center justify-between mb-10 z-50">
           <div className="flex-1">
             <Link 
               href={`/my-collections/${userCollectionId}`}
-              className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/90 px-4 py-2 text-sm font-bold text-amber-500 shadow-lg transition-transform hover:bg-zinc-800"
+              className="inline-flex items-center gap-2 border-2 border-zinc-900 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
             >
               ← {t('common.backCollection')}
             </Link>
@@ -332,8 +384,8 @@ export function SectionDetailClient({
           
           {/* Central Search Bar */}
           <div className="flex-1 flex justify-center relative" ref={searchRef}>
-            <div className="relative group w-full max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-amber-500 transition-colors" size={16} />
+            <div className="relative group w-full max-w-sm">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-900" strokeWidth={3} size={20} />
               <input
                 type="text"
                 placeholder="Pesquisar seleção..."
@@ -343,7 +395,7 @@ export function SectionDetailClient({
                   setIsDropdownOpen(true);
                 }}
                 onFocus={() => setIsDropdownOpen(true)}
-                className="w-full bg-zinc-900/90 border border-zinc-700 rounded-xl py-2 pl-10 pr-4 text-xs font-bold text-amber-500 placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/50 uppercase tracking-wider shadow-lg transition-all"
+                className="w-full border-4 border-zinc-900 bg-emerald-300 px-4 py-3 pl-12 text-sm font-black uppercase tracking-[0.2em] text-zinc-900 placeholder:text-zinc-700 focus:bg-emerald-400 focus:outline-none shadow-[4px_4px_0px_#18181b]"
               />
             </div>
             
@@ -355,10 +407,10 @@ export function SectionDetailClient({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute top-full mt-2 w-full max-w-xs bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden"
+                  className="absolute top-full mt-3 w-full max-w-sm bg-white border-4 border-zinc-900 shadow-[8px_8px_0px_#18181b] overflow-hidden"
                 >
                   {filteredSections.length > 0 ? (
-                    <div className="max-h-60 overflow-y-auto p-1 flex flex-col">
+                    <div className="max-h-60 overflow-y-auto flex flex-col">
                       {filteredSections.map(s => (
                         <Link 
                           key={s.sectionId}
@@ -367,23 +419,23 @@ export function SectionDetailClient({
                             setInstantFilter('');
                             setIsDropdownOpen(false);
                           }}
-                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-zinc-800 transition-colors group"
+                          className="flex items-center gap-3 px-4 py-3 border-b-2 border-zinc-900 hover:bg-zinc-100 transition-colors group last:border-b-0"
                         >
                           <img 
                             src={getFlagUrl(s.code, s.countryIso2 ?? null, 40)} 
-                            className="w-6 h-auto rounded-sm opacity-80 group-hover:opacity-100" 
+                            className="w-8 h-auto border border-zinc-900" 
                             alt={s.code}
                             onError={(e) => e.currentTarget.style.display = 'none'}
                           />
                           <div className="flex flex-col items-start">
-                            <span className="text-xs font-black text-amber-500">{s.code}</span>
-                            <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">{s.name}</span>
+                            <span className="text-sm font-black text-zinc-900 uppercase">{s.code}</span>
+                            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{s.name}</span>
                           </div>
                         </Link>
                       ))}
                     </div>
                   ) : (
-                    <div className="p-4 text-center text-xs font-bold text-zinc-500 uppercase tracking-widest">Nenhuma seleção encontrada.</div>
+                    <div className="p-4 text-center text-xs font-black text-zinc-500 uppercase tracking-widest">Nenhuma seleção encontrada.</div>
                   )}
                 </motion.div>
               )}
@@ -392,9 +444,9 @@ export function SectionDetailClient({
 
           <div className="flex-1 flex justify-end">
             {section?.code && FEDERATION_PAGES[section.code] && (
-              <div className="inline-flex items-center gap-2 rounded-xl border border-zinc-700 bg-zinc-900/90 px-4 py-2 text-sm font-bold text-zinc-400 shadow-lg">
-                <span className="text-xs uppercase tracking-widest text-zinc-500">Páginas</span>
-                <span className="text-amber-500">{FEDERATION_PAGES[section.code]} - {FEDERATION_PAGES[section.code] + 1}</span>
+              <div className="inline-flex items-center gap-3 border-4 border-zinc-900 bg-yellow-300 px-4 py-2 text-sm font-black text-zinc-900 shadow-[4px_4px_0px_#18181b]">
+                <span className="text-xs uppercase tracking-widest text-zinc-900">Páginas</span>
+                <span className="text-zinc-900 border-l-4 border-zinc-900 pl-3 ml-1">{FEDERATION_PAGES[section.code]} - {FEDERATION_PAGES[section.code] + 1}</span>
               </div>
             )}
           </div>
@@ -421,18 +473,18 @@ export function SectionDetailClient({
                   style={{ transformOrigin: 'right center', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                   className="w-full h-full relative"
                 >
-                  <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4 bg-zinc-900 p-4 sm:p-6 lg:p-8 border border-zinc-700/50 relative shadow-2xl h-full z-10">
+                  <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4 bg-zinc-50 p-4 sm:p-6 lg:p-8 border-4 border-zinc-900 border-r-2 relative shadow-[8px_8px_0px_#18181b] h-full z-10">
                     {/* Book spine shadow effect (Inside) */}
-                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/60 to-transparent pointer-events-none z-10"></div>
+                    <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-black/20 to-transparent pointer-events-none z-10"></div>
                     {/* Page edge effect (Outside) */}
-                    <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-white/5 to-transparent pointer-events-none z-10 border-l border-zinc-600/30"></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-4 bg-gradient-to-r from-black/5 to-transparent pointer-events-none z-10 border-l border-zinc-300"></div>
 
                     {isNationalTeam && (
-                      <div className="col-span-2 flex aspect-[3/2] flex-col justify-between overflow-hidden rounded-xl border border-zinc-700/50 bg-zinc-900/50 p-3 sm:p-4 shadow-inner lg:p-5 relative z-20">
+                      <div className="col-span-2 flex aspect-[3/2] flex-col justify-between overflow-hidden border-4 border-zinc-900 bg-zinc-100 p-3 sm:p-4 shadow-[4px_4px_0px_#18181b] lg:p-5 relative z-20">
                         <div>
-                          <span className="block text-lg font-black text-zinc-600 sm:text-xl lg:text-2xl leading-none">WE ARE</span>
+                          <span className="block text-lg font-black text-zinc-900 sm:text-xl lg:text-2xl leading-none">WE ARE</span>
                           <span 
-                            className={`block font-black uppercase tracking-tighter text-amber-500 drop-shadow-md leading-none mt-1 ${
+                            className={`block font-black uppercase tracking-tighter text-zinc-900 leading-none mt-1 drop-shadow-[2px_2px_0px_#14b8a6] ${
                               (section?.name?.length || 0) > 14 
                                 ? 'text-lg sm:text-xl lg:text-2xl' 
                                 : (section?.name?.length || 0) >= 8 
@@ -458,7 +510,7 @@ export function SectionDetailClient({
                               }}
                             />
                           )}
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-300 sm:text-xs lg:text-sm leading-tight line-clamp-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 sm:text-xs lg:text-sm leading-tight line-clamp-2">
                             {FEDERATION_NAMES[section?.code || ''] || "National Football Association"}
                           </span>
                         </div>
@@ -482,37 +534,37 @@ export function SectionDetailClient({
                   style={{ transformOrigin: 'left center', backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
                   className="w-full h-full relative"
                 >
-                  <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4 bg-zinc-900 p-4 sm:p-6 lg:p-8 border border-zinc-700/50 border-l-zinc-950/80 relative shadow-2xl h-full z-10">
+                  <div className="grid grid-cols-2 content-start gap-2 sm:gap-3 lg:grid-cols-4 lg:gap-4 bg-zinc-50 p-4 sm:p-6 lg:p-8 border-4 border-zinc-900 border-l-2 relative shadow-[8px_8px_0px_#18181b] h-full z-10">
                     {/* Book spine shadow effect (Inside) */}
-                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-black/60 to-transparent pointer-events-none z-10"></div>
+                    <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-black/20 to-transparent pointer-events-none z-10"></div>
                     {/* Page edge effect (Outside) */}
-                    <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-white/5 to-transparent pointer-events-none z-10 border-r border-zinc-600/30"></div>
+                    <div className="absolute right-0 top-0 bottom-0 w-4 bg-gradient-to-l from-black/5 to-transparent pointer-events-none z-10 border-r border-zinc-300"></div>
                     
                     {rightStickers.map((sticker, index) => (
                       <Fragment key={sticker.id}>
                         {isNationalTeam && index === 7 && (
                           <div className="col-span-1 flex aspect-[3/4] flex-col items-center justify-center p-2 text-center relative z-20">
-                            <span className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-500 drop-shadow-sm">
+                            <span className="mb-3 text-xs font-black uppercase tracking-widest text-zinc-900 drop-shadow-sm">
                               Group {teamIndex !== -1 ? String.fromCharCode(65 + groupIndex) : 'Info'}
                             </span>
                             <div className="grid w-full grid-cols-2 gap-2">
                               {groupTeams.map((team) => (
-                                <div key={team.sectionId} className="flex w-full rounded-md border border-zinc-800/50 shadow-sm overflow-hidden" style={{ borderTopRightRadius: '0.75rem', borderBottomRightRadius: '0.25rem' }}>
+                                <div key={team.sectionId} className="flex w-full border-2 border-zinc-900 bg-white overflow-hidden shadow-[2px_2px_0px_#18181b]">
                                   {/* Left Strip (Black) */}
-                                  <div className="flex w-5 shrink-0 items-center justify-center bg-zinc-950 border-r border-zinc-800/50">
-                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-200" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
+                                  <div className="flex w-5 shrink-0 items-center justify-center bg-zinc-200 border-r-2 border-zinc-900">
+                                    <span className="text-[8px] font-black uppercase tracking-widest text-zinc-900" style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}>
                                       {team.code}
                                     </span>
                                   </div>
                                   {/* Right part (Flag) */}
-                                  <div className="flex-1 bg-zinc-900 flex">
+                                  <div className="flex-1 bg-zinc-100 flex p-0.5">
                                     <img
                                       src={getFlagUrl(team.code, team.countryIso2 ?? null, 160)}
                                       alt={team.name}
-                                      className="w-full h-auto block object-cover opacity-90"
+                                      className="w-full h-auto block object-cover opacity-90 border border-zinc-900"
                                       onError={(e) => {
                                         e.currentTarget.style.display = 'none';
-                                        e.currentTarget.parentElement!.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-zinc-800/50 py-2"><span class="text-[8px] text-zinc-600">${team.code}</span></div>`;
+                                        e.currentTarget.parentElement!.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-zinc-200 py-2"><span class="text-[8px] text-zinc-600 font-black">${team.code}</span></div>`;
                                       }}
                                     />
                                   </div>
@@ -520,10 +572,10 @@ export function SectionDetailClient({
                               ))}
                               {groupTeams.length === 0 && (
                                 <div className="col-span-2 grid w-full grid-cols-2 gap-1 opacity-50 px-2">
-                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
-                                  <div className="aspect-[1.5/1] w-full rounded bg-zinc-800"></div>
+                                  <div className="aspect-[1.5/1] w-full border-2 border-zinc-900 bg-zinc-200"></div>
+                                  <div className="aspect-[1.5/1] w-full border-2 border-zinc-900 bg-zinc-200"></div>
+                                  <div className="aspect-[1.5/1] w-full border-2 border-zinc-900 bg-zinc-200"></div>
+                                  <div className="aspect-[1.5/1] w-full border-2 border-zinc-900 bg-zinc-200"></div>
                                 </div>
                               )}
                             </div>
@@ -551,7 +603,7 @@ export function SectionDetailClient({
 
 function StateMessage({ message }: { message: string }) {
   return (
-    <div className="rounded-3xl border-2 border-dashed border-amber-700/30 bg-zinc-900/50 p-12 text-center text-lg font-bold text-amber-100/70 shadow-inner">
+    <div className="border-4 border-dashed border-zinc-900 bg-white p-12 text-center text-lg font-black text-zinc-900 shadow-[8px_8px_0px_#18181b] uppercase">
       {message}
     </div>
   );

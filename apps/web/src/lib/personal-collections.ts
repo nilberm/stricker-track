@@ -271,11 +271,12 @@ export function changeStickerQuantity(
   userCollectionId: string,
   stickerId: string,
   direction: 'increment' | 'decrement',
+  amount: number = 1,
 ) {
   return authenticatedApiRequest<QuantityResponse>(
     `/user-collections/${userCollectionId}/stickers/${stickerId}/${direction}`,
     token,
-    { method: 'POST', body: JSON.stringify({ amount: 1 }) },
+    { method: 'POST', body: JSON.stringify({ amount }) },
   );
 }
 

@@ -70,12 +70,12 @@ export function useStickerQuantityMutation(
   return useMutation<
     QuantityResponse,
     Error,
-    { stickerId: string; direction: 'increment' | 'decrement' },
+    { stickerId: string; direction: 'increment' | 'decrement'; amount?: number },
     { snapshots: Array<[QueryKey, PersonalStickerPage | undefined]> }
   >({
-    mutationFn: ({ stickerId, direction }) =>
-      changeStickerQuantity(token, userCollectionId, stickerId, direction),
-    onMutate: async ({ stickerId, direction }) => {
+    mutationFn: ({ stickerId, direction, amount = 1 }) =>
+      changeStickerQuantity(token, userCollectionId, stickerId, direction, amount),
+    onMutate: async ({ stickerId, direction, amount = 1 }) => {
       const queryKeyPrefix = ['userCollectionStickers', userCollectionId];
       await queryClient.cancelQueries({ queryKey: queryKeyPrefix });
       
@@ -93,7 +93,7 @@ export function useStickerQuantityMutation(
               if (entry.id !== stickerId) return entry;
               const quantity = Math.max(
                 0,
-                entry.quantity + (direction === 'increment' ? 1 : -1),
+                entry.quantity + (direction === 'increment' ? amount : -amount),
               );
               return {
                 ...entry,

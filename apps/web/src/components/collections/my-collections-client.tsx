@@ -35,22 +35,19 @@ export function MyCollectionsClient() {
     <div className="grid gap-6 md:grid-cols-2">
       {query.data.map((entry) => (
         <article
-          className="relative overflow-hidden rounded-3xl border border-amber-700/30 bg-gradient-to-b from-zinc-800/80 to-zinc-900/90 p-6 shadow-inner"
+          className="relative overflow-hidden border-4 border-zinc-900 bg-white p-6 shadow-[8px_8px_0px_#18181b]"
           key={entry.id}
         >
-          {/* Card Header Layer with deep red accent */}
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-r from-red-950/40 to-transparent pointer-events-none" />
-          
           <div className="relative z-10">
-            <p className="text-sm font-bold text-amber-100/70 uppercase tracking-widest">
+            <p className="text-sm font-black text-zinc-500 uppercase tracking-widest">
               {entry.collection.releaseYear ?? t('common.notAvailable')}
             </p>
-            <h2 className="mt-2 text-2xl font-black text-slate-100 drop-shadow-md">{entry.collection.name}</h2>
+            <h2 className="mt-1 text-3xl font-black text-zinc-900 uppercase tracking-tighter leading-none">{entry.collection.name}</h2>
           </div>
 
-          <div className="relative z-10">
+          <div className="relative z-10 mt-6">
             <ProgressBar percentage={entry.progress.completionPercentage} />
-            <div className="mt-5 grid grid-cols-3 gap-3 text-center text-sm">
+            <div className="mt-6 grid grid-cols-3 gap-3 text-center text-sm">
               <Metric
                 label={t('myCollections.owned')}
                 value={entry.progress.ownedUnique}
@@ -65,7 +62,7 @@ export function MyCollectionsClient() {
               />
             </div>
             <Link
-              className="mt-6 block rounded-xl border-t border-amber-400/50 bg-gradient-to-b from-amber-600 to-amber-800 px-5 py-3 text-center font-bold tracking-wider uppercase text-amber-50 shadow-md shadow-black/50 transition hover:from-amber-500 hover:to-amber-700"
+              className="mt-6 block w-full border-2 border-zinc-900 bg-amber-400 px-4 py-4 text-center font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] hover:bg-amber-300"
               href={`/my-collections/${entry.id}`}
             >
               {t('myCollections.open')}
@@ -79,9 +76,9 @@ export function MyCollectionsClient() {
 
 function Metric({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-zinc-700/50 bg-zinc-900/60 p-3 shadow-inner">
-      <strong className="block text-xl text-slate-100 drop-shadow-md">{value}</strong>
-      <span className="text-amber-100/70">{label}</span>
+    <div className="border-2 border-zinc-900 bg-amber-100 p-3 flex flex-col items-center justify-center">
+      <strong className="block text-2xl font-black text-zinc-900 leading-none">{value}</strong>
+      <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-700 mt-1">{label}</span>
     </div>
   );
 }
@@ -89,14 +86,14 @@ function Metric({ label, value }: { label: string; value: number }) {
 function ProgressBar({ percentage }: { percentage: number }) {
   const t = useTranslations('myCollections');
   return (
-    <div className="mt-5">
-      <div className="mb-2 flex justify-between text-sm font-bold text-amber-100/70 tracking-widest uppercase">
+    <div>
+      <div className="mb-2 flex justify-between text-xs font-black text-zinc-900 tracking-widest uppercase">
         <span>{t('progress')}</span>
         <span>{percentage}%</span>
       </div>
-      <div className="h-3 overflow-hidden rounded-full border border-zinc-800 bg-zinc-950 shadow-inner">
+      <div className="h-4 w-full border-2 border-zinc-900 bg-zinc-200">
         <div
-          className="h-full rounded-full bg-gradient-to-r from-amber-600 to-amber-400"
+          className="h-full bg-amber-400 border-r-2 border-zinc-900"
           style={{ width: `${percentage}%` }}
         />
       </div>
@@ -106,7 +103,7 @@ function ProgressBar({ percentage }: { percentage: number }) {
 
 function StateMessage({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-amber-700/30 bg-zinc-900/50 p-12 text-center text-amber-100/70 shadow-inner">
+    <div className="border-4 border-dashed border-zinc-900 bg-white p-12 text-center text-lg font-black uppercase tracking-widest text-zinc-500">
       {message}
     </div>
   );

@@ -4,7 +4,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import type { Locale } from '../../i18n/config';
 import { Link } from '../../i18n/navigation';
-import { authenticatedApiRequest } from '../../lib/api';
+import { apiRequest } from '../../lib/api';
 import { accessTokenKey } from '../../lib/auth';
 import type {
   CollectionSection,
@@ -14,6 +14,7 @@ import type {
 } from '../../lib/catalog';
 import { Avatar } from './avatar';
 import { StartCollectionButton } from '../collections/start-collection-button';
+import { ArrowLeft } from 'lucide-react';
 
 const stickerTypes = [
   'PLAYER',
@@ -47,11 +48,6 @@ export function CollectionCatalogClient({ slug }: { slug: string }) {
   const [filters, setFilters] = useState<Filters>(() => readFilters());
 
   useEffect(() => {
-    const token = window.localStorage.getItem(accessTokenKey);
-    if (!token) {
-      setStatus('error');
-      return;
-    }
     setStatus('loading');
     const query = new URLSearchParams({
       locale,
@@ -63,19 +59,16 @@ export function CollectionCatalogClient({ slug }: { slug: string }) {
     if (filters.sectionId) query.set('sectionId', filters.sectionId);
     if (filters.type) query.set('type', filters.type);
 
-    void authenticatedApiRequest<CollectionSummary>(
-      `/collections/${slug}?locale=${locale}`,
-      token,
+    void apiRequest<CollectionSummary>(
+      `/collections/${slug}?locale=${locale}`
     )
       .then(async (loadedCollection) => {
         const [loadedSections, loadedStickers] = await Promise.all([
-          authenticatedApiRequest<CollectionSection[]>(
-            `/collections/${loadedCollection.id}/sections?locale=${locale}`,
-            token,
+          apiRequest<CollectionSection[]>(
+            `/collections/${loadedCollection.id}/sections?locale=${locale}`
           ),
-          authenticatedApiRequest<StickerPage>(
-            `/collections/${loadedCollection.id}/stickers?${query}`,
-            token,
+          apiRequest<StickerPage>(
+            `/collections/${loadedCollection.id}/stickers?${query}`
           ),
         ]);
         setCollection(loadedCollection);
@@ -109,23 +102,35 @@ export function CollectionCatalogClient({ slug }: { slug: string }) {
   return (
     <div className="mx-auto max-w-7xl px-5 py-10">
       {collection ? (
-        <header className="mb-8">
-          <Link className="text-sm font-bold text-sky-700" href="/dashboard">
+        <header className="mb-5 border-b-4 border-zinc-900 pb-5">
+          <Link 
+            className="mb-8 inline-flex items-center gap-2 border-2 border-zinc-900 bg-white px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]" 
+            href="/"
+          >
+            <ArrowLeft className="h-4 w-4" strokeWidth={3} />
             {t('common.backDashboard')}
           </Link>
-          <h1 className="mt-4 text-4xl font-black">{collection.name}</h1>
-          <p className="mt-3 max-w-3xl text-lg leading-7 text-slate-600">
-            {collection.description}
-          </p>
-          <p className="mt-3 text-sm font-semibold text-slate-500">
-            {t('collection.summary', {
-              year: collection.releaseYear ?? t('common.notAvailable'),
-              count: collection.totalStickers,
-            })}
-          </p>
-          <div className="mt-5 inline-flex">
-            <StartCollectionButton collectionId={collection.id} />
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h1 className="text-5xl font-black uppercase tracking-tight text-zinc-900 sm:text-6xl drop-shadow-[4px_4px_0px_#14b8a6]">
+                {collection.name}
+              </h1>
+              <p className="mt-2 inline-block border-2 border-zinc-900 bg-yellow-300 px-3 py-1 text-sm font-black uppercase shadow-[2px_2px_0px_#18181b]">
+                {t('collection.summary', {
+                  year: collection.releaseYear ?? t('common.notAvailable'),
+                  count: collection.totalStickers,
+                })}
+              </p>
+            </div>
+            <div className="block w-full shrink-0 sm:w-64 border-4 border-zinc-900 shadow-[8px_8px_0px_#18181b] transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[12px_12px_0px_#18181b]">
+              <StartCollectionButton collectionId={collection.id} />
+            </div>
           </div>
+          {collection.description ? (
+            <p className="mt-6 max-w-3xl text-xl font-bold text-zinc-700">
+              {collection.description}
+            </p>
+          ) : null}
         </header>
       ) : null}
 
@@ -171,7 +176,7 @@ function CatalogFilters({
   const [search, setSearch] = useState(filters.search);
   return (
     <form
-      className="mb-8 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:grid-cols-4"
+      className="mb-12 grid gap-4 border-4 border-zinc-900 bg-emerald-300 p-6 shadow-[8px_8px_0px_#18181b] md:grid-cols-4"
       onSubmit={(event) => {
         event.preventDefault();
         onChange({ ...filters, search, page: 1 });
@@ -179,14 +184,14 @@ function CatalogFilters({
     >
       <input
         aria-label={t('catalog.search')}
-        className="rounded-xl border border-slate-300 px-4 py-3"
+        className="border-2 border-zinc-900 bg-white px-4 py-3 font-bold text-zinc-900 placeholder:text-zinc-500 focus:outline-none focus:ring-4 focus:ring-zinc-900/10 shadow-[2px_2px_0px_#18181b]"
         onChange={(event) => setSearch(event.target.value)}
         placeholder={t('catalog.searchPlaceholder')}
         value={search}
       />
       <select
         aria-label={t('catalog.sectionFilter')}
-        className="rounded-xl border border-slate-300 bg-white px-4 py-3"
+        className="border-2 border-zinc-900 bg-white px-4 py-3 font-bold text-zinc-900 focus:outline-none focus:ring-4 focus:ring-zinc-900/10 shadow-[2px_2px_0px_#18181b]"
         onChange={(event) =>
           onChange({ ...filters, sectionId: event.target.value, page: 1 })
         }
@@ -201,7 +206,7 @@ function CatalogFilters({
       </select>
       <select
         aria-label={t('catalog.typeFilter')}
-        className="rounded-xl border border-slate-300 bg-white px-4 py-3"
+        className="border-2 border-zinc-900 bg-white px-4 py-3 font-bold text-zinc-900 focus:outline-none focus:ring-4 focus:ring-zinc-900/10 shadow-[2px_2px_0px_#18181b]"
         onChange={(event) =>
           onChange({ ...filters, type: event.target.value, page: 1 })
         }
@@ -214,10 +219,10 @@ function CatalogFilters({
           </option>
         ))}
       </select>
-      <div className="flex gap-2">
+      <div className="flex gap-4">
         <select
           aria-label={t('catalog.sort')}
-          className="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-3 py-3"
+          className="min-w-0 flex-1 border-2 border-zinc-900 bg-white px-3 py-3 font-bold text-zinc-900 focus:outline-none focus:ring-4 focus:ring-zinc-900/10 shadow-[2px_2px_0px_#18181b]"
           onChange={(event) =>
             onChange({ ...filters, sort: event.target.value, page: 1 })
           }
@@ -228,7 +233,7 @@ function CatalogFilters({
           <option value="name">{t('sort.name')}</option>
         </select>
         <button
-          className="rounded-xl bg-sky-600 px-4 font-bold text-white"
+          className="border-2 border-zinc-900 bg-red-500 px-6 font-black uppercase tracking-widest text-white shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b]"
           type="submit"
         >
           {t('common.search')}
@@ -249,24 +254,24 @@ function StickerCard({
   const displayName =
     sticker.player?.displayName ?? sticker.player?.name ?? sticker.name;
   return (
-    <article className="flex gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <article className="flex gap-4 border-4 border-zinc-900 bg-white p-5 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-1 hover:-translate-y-1 hover:shadow-[8px_8px_0px_#18181b]">
       <Avatar imageUrl={sticker.player?.image?.url} name={displayName} />
       <div className="min-w-0 flex-1">
         <div className="flex items-start justify-between gap-3">
-          <p className="font-black text-sky-700">{sticker.code}</p>
-          <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-bold">
+          <p className="border-b-2 border-zinc-900 text-lg font-black text-zinc-900">{sticker.code}</p>
+          <span className="border-2 border-zinc-900 bg-sky-300 px-2 py-1 text-xs font-black uppercase text-zinc-900 shadow-[2px_2px_0px_#18181b]">
             {t(`stickerTypes.${sticker.type}`)}
           </span>
         </div>
-        <h2 className="mt-2 truncate text-lg font-black">{sticker.name}</h2>
-        <p className="mt-1 text-sm text-slate-500">
+        <h2 className="mt-3 truncate text-xl font-black uppercase text-zinc-900">{sticker.name}</h2>
+        <p className="mt-1 text-sm font-bold uppercase text-zinc-500">
           {sticker.section?.name ?? t('catalog.noSection')}
         </p>
         {sticker.player ? (
-          <p className="mt-1 text-sm font-semibold">{sticker.player.name}</p>
+          <p className="mt-2 text-sm font-black uppercase text-zinc-700">{sticker.player.name}</p>
         ) : null}
         <Link
-          className="mt-4 inline-block text-sm font-bold text-sky-700"
+          className="mt-6 inline-block border-2 border-zinc-900 bg-amber-400 px-4 py-2 text-xs font-black uppercase tracking-widest text-zinc-900 shadow-[2px_2px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#18181b]"
           href={`/collections/${slug}/stickers/${sticker.id}`}
         >
           {t('catalog.viewDetails')}
@@ -289,18 +294,18 @@ function Pagination({
 }) {
   const t = useTranslations();
   return (
-    <nav className="mt-8 flex items-center justify-center gap-4">
+    <nav className="mt-12 flex items-center justify-center gap-6">
       <button
-        className="rounded-xl border border-slate-300 bg-white px-4 py-2 font-bold disabled:opacity-40"
+        className="border-2 border-zinc-900 bg-zinc-200 px-5 py-3 font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_#18181b]"
         disabled={page <= 1}
         onClick={() => onChange({ ...filters, page: page - 1 })}
         type="button"
       >
         {t('pagination.previous')}
       </button>
-      <span>{t('pagination.page', { page, totalPages })}</span>
+      <span className="font-black uppercase tracking-widest text-zinc-900">{t('pagination.page', { page, totalPages })}</span>
       <button
-        className="rounded-xl border border-slate-300 bg-white px-4 py-2 font-bold disabled:opacity-40"
+        className="border-2 border-zinc-900 bg-zinc-200 px-5 py-3 font-black uppercase tracking-widest text-zinc-900 shadow-[4px_4px_0px_#18181b] transition-all hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[6px_6px_0px_#18181b] disabled:opacity-50 disabled:hover:translate-x-0 disabled:hover:translate-y-0 disabled:hover:shadow-[4px_4px_0px_#18181b]"
         disabled={page >= totalPages}
         onClick={() => onChange({ ...filters, page: page + 1 })}
         type="button"
@@ -313,7 +318,7 @@ function Pagination({
 
 function StateMessage({ message }: { message: string }) {
   return (
-    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-12 text-center text-slate-600">
+    <div className="border-4 border-dashed border-zinc-900 bg-zinc-100 p-12 text-center text-xl font-black uppercase text-zinc-500">
       {message}
     </div>
   );

@@ -410,6 +410,9 @@
       "import": "Importar colección",
       "export": "Exportar colección",
       "group": "Grupo {name}"
+    },
+    "sections": {
+      "fwc": "Especiales"
     }
   },
   "transferModal": {
@@ -459,5 +462,34 @@
   "overview": {
     "searchPlaceholder": "Buscar selección (ej: BRA)",
     "searchAria": "Filtrar por Código"
+  },
+  "stickerCard": {
+    "types": {
+      "PLAYER": "Jugador",
+      "BADGE": "Escudo",
+      "TEAM": "Equipo",
+      "OTHER": "Cromo"
+    },
+    "controls": {
+      "removeCard": "Eliminar carta del álbum",
+      "manageDuplicates": "Gestionar repetidos",
+      "deleteCard": "Eliminar Carta",
+      "done": "Hecho",
+      "cancel": "Cancelar",
+      "confirmDeleteAll": "Sí, Eliminar Todo"
+    },
+    "modal": {
+      "duplicatesOf": "Repetidos de",
+      "trackCopies": "Controla cuántas copias adicionales tienes para intercambiar.",
+      "extraCopies": "Copias Adicionales"
+    },
+    "badge": {
+      "oneCopy": "1 COPIA",
+      "copies": "{quantity} COPIAS"
+    },
+    "alert": {
+      "title": "¡Atención!",
+      "warningText": "Estás a punto de eliminar <bold>TODAS LAS {quantity} COPIAS</bold> de la figurita <highlight>{code}</highlight>. ¿Estás seguro?"
+    }
   }
 }

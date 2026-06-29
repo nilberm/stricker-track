@@ -9,6 +9,7 @@ export type CollectionSummary = {
   sectionCount: number;
   stickerCount: number;
   codeExample: string | null;
+  categoryId?: string;
 };
 
 export type CollectionSection = {

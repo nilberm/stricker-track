@@ -27,7 +27,7 @@ export function PersonalStickerCard({
   const isTeam = sticker.type === 'TEAM';
   const isFoil = (sticker.type === 'BADGE' || sticker.type === 'SPECIAL') && isGlued;
 
-  let baseClass = 'group relative flex flex-col rounded-xl transition-all p-2 focus-within:ring-2 focus-within:ring-amber-500/50';
+  let baseClass = 'group relative flex flex-col rounded-none transition-all p-2';
   
   if (isTeam) {
     baseClass += ' col-span-2 aspect-[3/2]';
@@ -68,21 +68,20 @@ export function PersonalStickerCard({
       {hasExtras && (
         <>
           {extrasCount >= 3 && (
-            <div className="absolute inset-0 -z-30 translate-x-3 translate-y-3 rounded-xl border border-zinc-900 bg-zinc-950 shadow-sm" />
+            <div className="absolute inset-0 -z-30 translate-x-3 translate-y-3 border-4 border-zinc-900 bg-emerald-400 shadow-[2px_2px_0px_#18181b]" />
           )}
           {extrasCount >= 2 && (
-            <div className="absolute inset-0 -z-20 translate-x-2 translate-y-2 rounded-xl border border-zinc-800 bg-zinc-900 shadow-sm" />
+            <div className="absolute inset-0 -z-20 translate-x-2 translate-y-2 border-4 border-zinc-900 bg-emerald-300 shadow-[2px_2px_0px_#18181b]" />
           )}
           {extrasCount >= 1 && (
-            <div className="absolute inset-0 -z-10 translate-x-1 translate-y-1 rounded-xl border border-zinc-700 bg-zinc-800/80 shadow-sm" />
+            <div className="absolute inset-0 -z-10 translate-x-1 translate-y-1 border-4 border-zinc-900 bg-emerald-200 shadow-[2px_2px_0px_#18181b]" />
           )}
         </>
       )}
 
       {/* Background inner wrapper (Carta principal) */}
-      <div className={`absolute inset-0 z-0 rounded-xl transition-colors ${isMissing ? 'bg-zinc-900/50 border border-dashed border-zinc-700/50' : 'bg-gradient-to-br from-zinc-800 to-zinc-900 border border-amber-500/40 overflow-hidden'}`}>
-        {!isMissing && !hasExtras && <div className="absolute inset-0 shadow-md shadow-black/60" />}
-        {isFoil && <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-amber-400/10 to-transparent pointer-events-none" />}
+      <div className={`absolute inset-0 z-0 transition-colors ${isMissing ? 'bg-zinc-200 border-4 border-dashed border-zinc-400' : 'bg-white border-4 border-zinc-900 shadow-[4px_4px_0px_#18181b] overflow-hidden'}`}>
+        {isFoil && <div className="absolute inset-0 bg-yellow-100 pointer-events-none mix-blend-multiply" />}
       </div>
 
       {/* Content */}
@@ -91,15 +90,15 @@ export function PersonalStickerCard({
         {/* Top Row: Code and Badge */}
         {isMissing ? (
           <div className="flex w-full justify-between items-start">
-            <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{sticker.code}</span>
-            <span className="rounded-md border border-zinc-800 bg-zinc-950/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-widest text-zinc-500 shadow-inner">
+            <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">{sticker.code}</span>
+            <span className="border-2 border-zinc-400 bg-zinc-200 px-1 py-0.5 text-[8px] font-black uppercase tracking-widest text-zinc-500">
               {t(`stickerTypes.${sticker.type}`)}
             </span>
           </div>
         ) : (
           <div className="flex w-full items-start justify-between gap-1">
-            <span className="text-xs font-black tracking-wider text-amber-500 drop-shadow-sm">{sticker.code}</span>
-            <span className="rounded-md border border-zinc-800 bg-zinc-950/80 px-1 py-0.5 text-[8px] font-bold uppercase tracking-widest text-zinc-400 shadow-inner">
+            <span className="text-xs font-black tracking-wider text-zinc-900 bg-yellow-300 border-2 border-zinc-900 px-1">{sticker.code}</span>
+            <span className="border-2 border-zinc-900 bg-zinc-900 px-1 py-0.5 text-[8px] font-black uppercase tracking-widest text-white">
               {t(`stickerTypes.${sticker.type}`)}
             </span>
           </div>
@@ -108,17 +107,17 @@ export function PersonalStickerCard({
         {/* Center Area */}
         <div className="flex-1 flex flex-col justify-center items-center w-full min-h-0">
           {isMissing ? (
-            <span className="text-4xl font-black text-zinc-700/30 group-hover:text-zinc-700/50 transition-colors">{sticker.code}</span>
+            <span className="text-4xl font-black text-zinc-400 group-hover:text-zinc-500 transition-colors">{sticker.code}</span>
           ) : (
             <>
               <div className="shrink-0 scale-75 transform origin-center">
                 <Avatar imageUrl={sticker.player?.image?.url} name={displayName} />
               </div>
-              <h2 className="mt-1 w-full truncate text-center text-[10px] font-black leading-tight text-zinc-100 drop-shadow-md sm:text-xs">
+              <h2 className="mt-1 w-full truncate text-center text-[10px] font-black leading-tight text-zinc-900 sm:text-xs">
                 {sticker.name}
               </h2>
               {sticker.player && sticker.player.name !== sticker.name && (
-                <p className="w-full truncate text-center text-[8px] font-semibold tracking-wider text-zinc-400">
+                <p className="w-full truncate text-center text-[8px] font-black tracking-wider text-zinc-600">
                   {sticker.player.name}
                 </p>
               )}
@@ -133,7 +132,7 @@ export function PersonalStickerCard({
               onClick={() => mutation.mutate({ stickerId: sticker.id, direction: 'increment' })}
               disabled={mutation.isPending}
               aria-label={t('myCollections.increment')}
-              className="flex items-center justify-center rounded-full w-8 h-8 bg-zinc-800/30 text-zinc-600 hover:text-amber-500 hover:bg-zinc-800 border border-transparent hover:border-amber-500/30 transition-all focus:outline-none"
+              className="flex items-center justify-center border-2 border-zinc-400 w-8 h-8 bg-zinc-100 text-zinc-400 hover:text-zinc-900 hover:bg-emerald-300 hover:border-zinc-900 hover:shadow-[2px_2px_0px_#18181b] transition-all focus:outline-none"
             >
               <Check size={18} strokeWidth={3} />
             </button>
@@ -142,50 +141,50 @@ export function PersonalStickerCard({
               {/* Default view when collected */}
               {hasExtras && (
                 <div className="absolute top-[-250%] right-[-10%] flex flex-col gap-1 items-end opacity-0 group-hover:opacity-100 transition-all z-20">
-                  <div className="flex items-center gap-1 bg-zinc-950/90 rounded border border-zinc-700 p-1 shadow-lg pointer-events-auto">
+                  <div className="flex items-center gap-1 bg-white border-2 border-zinc-900 p-1 shadow-[2px_2px_0px_#18181b] pointer-events-auto">
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); weightMutation.mutate({ stickerId: sticker.id, weight: Math.max(1, sticker.tradeWeight - 1) }); }}
                       disabled={weightMutation.isPending || sticker.tradeWeight <= 1}
-                      className="p-0.5 text-zinc-400 hover:text-amber-500 disabled:opacity-30"
+                      className="p-0.5 text-zinc-900 hover:bg-emerald-300 disabled:opacity-30 border-2 border-transparent hover:border-zinc-900"
                     >
-                      <ChevronDown size={14} />
+                      <ChevronDown size={14} strokeWidth={3} />
                     </button>
-                    <span className="text-[10px] font-bold text-amber-500 w-12 text-center">
+                    <span className="text-[10px] font-black text-zinc-900 w-12 text-center uppercase tracking-widest">
                       Peso {sticker.tradeWeight}
                     </span>
                     <button 
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); weightMutation.mutate({ stickerId: sticker.id, weight: Math.min(99, sticker.tradeWeight + 1) }); }}
                       disabled={weightMutation.isPending}
-                      className="p-0.5 text-zinc-400 hover:text-amber-500 disabled:opacity-30"
+                      className="p-0.5 text-zinc-900 hover:bg-emerald-300 disabled:opacity-30 border-2 border-transparent hover:border-zinc-900"
                     >
-                      <ChevronUp size={14} />
+                      <ChevronUp size={14} strokeWidth={3} />
                     </button>
                   </div>
                 </div>
               )}
               {hasExtras && (
-                <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black text-amber-500 bg-zinc-950/90 px-2.5 py-0.5 rounded border border-amber-500/30 shadow-md">
-                  <Copy size={10} />
+                <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-wider font-black text-zinc-900 bg-emerald-300 px-2.5 py-0.5 border-2 border-zinc-900 shadow-[2px_2px_0px_#18181b]">
+                  <Copy size={10} strokeWidth={3} />
                   <span>{extrasCount} {extrasCount === 1 ? 'Cópia' : 'Cópias'}</span>
                 </div>
               )}
 
               {/* Hover Actions */}
-              <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all bg-zinc-900/90 backdrop-blur-sm rounded-lg scale-95 group-hover:scale-100">
+              <div className="absolute inset-0 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all bg-white border-4 border-zinc-900 shadow-[4px_4px_0px_#18181b] scale-95 group-hover:scale-100 z-30">
                 <button
                   onClick={handleDecrement}
                   disabled={mutation.isPending}
-                  className="flex h-6 w-6 items-center justify-center rounded-full border border-amber-900/50 bg-zinc-800 text-amber-500 hover:bg-amber-500 hover:text-zinc-900 transition focus:outline-none"
+                  className="flex h-6 w-6 items-center justify-center border-2 border-zinc-900 bg-red-400 text-zinc-900 hover:bg-red-500 transition focus:outline-none shadow-[2px_2px_0px_#18181b] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
                 >
                   <Minus size={14} strokeWidth={3} />
                 </button>
-                <span className="min-w-[1.5rem] text-center text-xs font-black text-amber-500 drop-shadow-md">
+                <span className="min-w-[1.5rem] text-center text-xs font-black text-zinc-900">
                   {sticker.quantity}
                 </span>
                 <button
                   onClick={() => mutation.mutate({ stickerId: sticker.id, direction: 'increment' })}
                   disabled={mutation.isPending}
-                  className="flex h-6 w-6 items-center justify-center rounded-full border border-amber-900/50 bg-zinc-800 text-amber-500 hover:bg-amber-500 hover:text-zinc-900 transition focus:outline-none"
+                  className="flex h-6 w-6 items-center justify-center border-2 border-zinc-900 bg-emerald-400 text-zinc-900 hover:bg-emerald-500 transition focus:outline-none shadow-[2px_2px_0px_#18181b] active:translate-x-0.5 active:translate-y-0.5 active:shadow-none"
                 >
                   <Plus size={14} strokeWidth={3} />
                 </button>
@@ -197,24 +196,24 @@ export function PersonalStickerCard({
 
       {/* Modal Customizado de Confirmação (Renderizado via Portal) */}
       {showConfirmModal && mounted && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" style={{ margin: 0 }}>
-          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl max-w-xs w-full p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-black text-amber-500 mb-3">Atenção!</h3>
-            <p className="text-sm font-semibold text-zinc-300 mb-6 leading-relaxed">
-              Esta figurinha já está <span className="text-amber-500">colada</span> no seu álbum.
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-zinc-900/80 backdrop-blur-sm p-4 animate-in fade-in duration-200" style={{ margin: 0 }}>
+          <div className="bg-white border-4 border-zinc-900 max-w-xs w-full p-6 shadow-[8px_8px_0px_#18181b] animate-in zoom-in-95 duration-200">
+            <h3 className="text-xl font-black text-zinc-900 mb-3 uppercase tracking-widest">Atenção!</h3>
+            <p className="text-sm font-black text-zinc-700 mb-6 leading-relaxed">
+              Esta figurinha já está <span className="text-zinc-900 bg-emerald-300 px-1 border-2 border-zinc-900">colada</span> no seu álbum.
               <br /><br />
               Deseja realmente removê-la para corrigir um erro?
             </p>
             <div className="flex justify-end gap-3">
               <button 
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 rounded-lg text-xs font-bold text-zinc-400 hover:text-white hover:bg-zinc-800 transition"
+                className="px-4 py-2 text-xs font-black text-zinc-900 border-2 border-zinc-900 bg-zinc-200 hover:bg-zinc-300 transition shadow-[2px_2px_0px_#18181b] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#18181b]"
               >
                 Cancelar
               </button>
               <button 
                 onClick={confirmDecrement}
-                className="px-4 py-2 rounded-lg text-xs font-bold bg-amber-600 text-amber-950 hover:bg-amber-500 transition shadow-md"
+                className="px-4 py-2 text-xs font-black bg-red-400 text-zinc-900 border-2 border-zinc-900 hover:bg-red-500 transition shadow-[2px_2px_0px_#18181b] hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-[4px_4px_0px_#18181b]"
               >
                 Sim, remover
               </button>
