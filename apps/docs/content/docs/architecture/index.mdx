@@ -1,0 +1,27 @@
+---
+title: Monorepo & Architecture
+description: Project structure and core libraries.
+---
+
+**StickerTrack** is structured as a **Monorepo** using [Turborepo](https://turbo.build/repo/docs) with the `pnpm` package manager.
+
+## Directory Structure
+
+```plaintext
+sticker-track/
+├── apps/
+│   ├── api/         # Backend (NestJS, REST)
+│   ├── docs/        # Central Documentation (Next.js + Fumadocs)
+│   └── web/         # Main Frontend (Next.js App Router)
+├── packages/
+│   ├── database/    # Prisma Schema, Migrations, and Database Utilities
+│   └── shared/      # Shared types, Zod validations, and pure functions
+```
+
+### Why a Monorepo?
+This allows us to share the database client (`@sticker-track/database`) and TypeScript types (`@sticker-track/shared`) across the Backend, Frontend, and Documentation without requiring complex synchronization or duplicated repositories.
+
+### Standard Scripts
+Thanks to Turborepo (`turbo.json`), running commands at the root executes them in parallel across all applications based on topological dependencies.
+- `pnpm dev`: Starts the complete development environment (API, Web, Docs).
+- `pnpm build`: Executes isolated builds and leverages smart caching for unchanged packages.

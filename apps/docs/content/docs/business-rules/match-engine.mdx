@@ -1,0 +1,36 @@
+---
+title: Match Engine
+description: Comparison logic for Sticker Trades.
+---
+
+The **Match Engine** is the core of StickerTrack's social mechanics. It is responsible for analyzing the inventory of two users and determining which stickers can be traded between them.
+
+## How It Works
+
+The comparison (Match) always occurs between the **Visitor** (who is viewing the profile) and the **Target** (the owner of the viewed profile).
+
+The baseline logic for a sticker to be considered "Tradeable" requires two simultaneous conditions:
+1. The giver must possess **more than 1 unit** of that sticker (i.e., has duplicates).
+2. The receiver must possess **exactly 0 units** of that sticker (i.e., it is missing from their album).
+
+### Backend Implementation
+
+The Match Engine in NestJS (`UserCollectionsService.getMatch`) cross-references the sticker lists (`userStickers`) grouped by `collectionId`. 
+
+```typescript
+// Pseudocode example of the validation rule
+if (visitorQty > 1 && targetQty === 0) {
+  // Visitor can GIVE to Target
+  visitorCanGive.push(sticker);
+}
+
+if (targetQty > 1 && visitorQty === 0) {
+  // Target can GIVE to Visitor
+  targetCanGive.push(sticker);
+}
+```
+
+### Security and Privacy
+
+- **Private Collections**: The Match Engine cannot process trades if the Target's collection is private (`isPublic = false`), resulting in a `404 Not Found` error.
+- **Different Collections**: It is not possible to cross-reference information between different collections (e.g., World Cup 2022 vs World Cup 2026). Both lists (`visitorCollectionId` and `targetCollectionId`) must derive from the same parent collection.

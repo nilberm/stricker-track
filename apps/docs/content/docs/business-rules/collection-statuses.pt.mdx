@@ -1,0 +1,22 @@
+---
+title: Status de Coleções
+description: Ciclo de vida e acessibilidade das coleções.
+---
+
+O StickerTrack gerencia coleções em diferentes estados para garantir que apenas dados completos e revisados sejam disponibilizados aos usuários.
+
+## Status da Coleção Base (`Collection`)
+
+A propriedade `status` no modelo `Collection` define se uma coleção está disponível globalmente na plataforma.
+
+- `DRAFT`: Estado padrão. A coleção está sendo construída (ex: script de importação ainda está rodando, seções estão sendo ajustadas). **Não aparece** nas listagens públicas.
+- `PUBLISHED`: A coleção está pronta e visível para todos os usuários iniciarem seu acompanhamento.
+
+> **Importante:** Quando importar um novo catálogo (ex: Copa do Mundo), lembre-se de rodar o script `publish.ts` para alterar o status para `PUBLISHED` após a conclusão da importação.
+
+## Coleções do Usuário (`UserCollection`)
+
+Quando um usuário inicia uma coleção, é criado um registro `UserCollection`. Este registro possui a propriedade de privacidade `isPublic`.
+
+- `isPublic = false` (Padrão): A coleção é privada. O usuário pode gerenciar suas figurinhas, mas seu perfil e inventário não aparecerão no Explorador da Comunidade e o Match Engine recusará requisições externas para esta coleção.
+- `isPublic = true`: A coleção é pública. O inventário do usuário é indexado pelo Match Engine e visível na aba de "Comunidade", permitindo que outros colecionadores proponham trocas.

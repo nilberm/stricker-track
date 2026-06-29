@@ -1,0 +1,28 @@
+---
+title: Infrastructure
+description: Hosting, database, and deployment.
+---
+
+**StickerTrack** is designed to be scalable and serverless-first. Below is a detailed breakdown of the services we use in production.
+
+## Services Used
+
+1. **Vercel / Netlify (Main Frontend & Docs)**
+   - The Web application (`apps/web`) and Documentation (`apps/docs`) are optimized for Vercel or Netlify, utilizing Next.js App Router's native SSR (Server-Side Rendering).
+   
+2. **Render (Backend API)**
+   - The NestJS app (`apps/api`) is hosted as a Web Service on Render.
+   - Environment variables such as `DATABASE_URL` and `JWT_SECRET` must be configured directly in the Render dashboard.
+
+3. **Neon (Database)**
+   - The Serverless PostgreSQL database is provided by Neon.tech.
+   - Advantages: Native connection pooling, branch separation (great for CI/CD and Staging environments), and auto-scaling.
+
+## Deployment and Migrations (CI/CD)
+
+When deploying, the Render API runs a custom build command:
+```bash
+npm install -g pnpm && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @sticker-track/api build
+```
+
+**Important:** Database migrations (`prisma migrate deploy`) must be executed **before** the new backend and frontend code starts receiving traffic to avoid schema mismatch errors.

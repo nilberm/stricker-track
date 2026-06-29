@@ -1,0 +1,36 @@
+---
+title: Match Engine
+description: Lógica de comparação para Trocas de Figurinhas.
+---
+
+O **Match Engine** é o núcleo da mecânica social do StickerTrack. Ele é responsável por analisar o inventário de dois usuários e determinar quais figurinhas podem ser trocadas entre eles.
+
+## Como Funciona
+
+A comparação (Match) sempre ocorre entre o **Visitante** (quem está acessando o perfil) e o **Alvo** (o dono do perfil acessado).
+
+A lógica base para uma figurinha ser "Trocável" exige duas condições simultâneas:
+1. O doador deve possuir **mais de 1 unidade** daquela figurinha (ou seja, possui repetição).
+2. O recebedor deve possuir **exatamente 0 unidades** daquela figurinha (ou seja, falta no álbum).
+
+### Implementação no Backend
+
+O Match Engine no NestJS (`UserCollectionsService.getMatch`) cruza as listas de figurinhas (`userStickers`) agrupadas por `collectionId`. 
+
+```typescript
+// Exemplo pseudocódigo da regra de validação
+if (visitorQty > 1 && targetQty === 0) {
+  // Visitante pode DOAR para o Alvo
+  visitorCanGive.push(sticker);
+}
+
+if (targetQty > 1 && visitorQty === 0) {
+  // Alvo pode DOAR para o Visitante
+  targetCanGive.push(sticker);
+}
+```
+
+### Segurança e Privacidade
+
+- **Coleções Privadas**: O Match Engine não pode processar trocas se a coleção do Alvo for privada (`isPublic = false`), resultando em erro `404 Not Found`.
+- **Coleções Diferentes**: Não é possível cruzar informações entre coleções diferentes (Ex: Copa do Mundo 2022 vs Copa do Mundo 2026). Ambas as listas (`visitorCollectionId` e `targetCollectionId`) devem derivar da mesma coleção matriz.

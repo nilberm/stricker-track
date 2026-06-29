@@ -1,0 +1,19 @@
+---
+title: Trade Weights
+description: The Weight and Value system for stickers.
+---
+
+Not all stickers hold the same value or difficulty of acquisition. To allow users to determine how much they value a duplicate sticker, StickerTrack implements the **Trade Weights** system.
+
+## How It Works
+
+Each `UserSticker` record (which links a user to a sticker) contains a property called `tradeWeight`.
+
+- **Default Value**: Every acquired sticker is initially given a `tradeWeight: 1`.
+- **Valuable Stickers**: Shiny, Special, Gold, Legend, or Shield stickers are generally harder to obtain. A user can mark one of these stickers with a higher weight (e.g., `tradeWeight: 3`), indicating that to give up that sticker, they expect to receive the equivalent of 3 normal stickers in return.
+
+## Impact on the Match Engine
+
+On the frontend, during the process of viewing a Match, trade weights are taken into account to suggest whether a proposal is fair.
+
+If `visitorCanGive` contains 1 sticker with a weight of `3`, the system will alert that `targetCanGive` should ideally yield 3 normal stickers (`weight 1`) so that the "trade balance" is equal to zero.

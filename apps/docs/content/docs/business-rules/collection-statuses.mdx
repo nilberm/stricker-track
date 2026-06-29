@@ -1,0 +1,22 @@
+---
+title: Collection Statuses
+description: Lifecycle and accessibility of collections.
+---
+
+StickerTrack manages collections in different states to ensure that only complete and reviewed data is made available to users.
+
+## Base Collection Status (`Collection`)
+
+The `status` property in the `Collection` model determines whether a collection is globally available on the platform.
+
+- `DRAFT`: Default state. The collection is currently being built (e.g., the import script is still running, sections are being adjusted). It **does not appear** in public listings.
+- `PUBLISHED`: The collection is ready and visible for all users to start tracking.
+
+> **Important:** When importing a new catalog (e.g., World Cup), remember to run the `publish.ts` script to change the status to `PUBLISHED` after the import completes.
+
+## User Collections (`UserCollection`)
+
+When a user starts a collection, a `UserCollection` record is created. This record has the privacy property `isPublic`.
+
+- `isPublic = false` (Default): The collection is private. The user can manage their stickers, but their profile and inventory will not appear in the Community Explorer, and the Match Engine will reject external requests for this collection.
+- `isPublic = true`: The collection is public. The user's inventory is indexed by the Match Engine and visible in the "Community" tab, allowing other collectors to propose trades.

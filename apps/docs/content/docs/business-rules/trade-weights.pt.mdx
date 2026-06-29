@@ -1,0 +1,19 @@
+---
+title: Trade Weights
+description: O Sistema de Pesos e Valores das figurinhas.
+---
+
+Nem todas as figurinhas possuem o mesmo valor ou dificuldade de obtenção. Para permitir que usuários estipulem o quanto valorizam uma figurinha repetida, o StickerTrack implementa o sistema de **Trade Weights** (Pesos de Troca).
+
+## Funcionamento
+
+Cada registro de `UserSticker` (que vincula um usuário a uma figurinha) contém uma propriedade chamada `tradeWeight`.
+
+- **Valor Padrão**: Toda figurinha obtida ganha inicialmente o `tradeWeight: 1`.
+- **Figurinhas Valiosas**: Figurinhas Brilhantes, Especiais, Ouros, Lendas ou Escudos geralmente são mais difíceis de obter. Um usuário pode marcar uma dessas figurinhas com um peso maior (ex: `tradeWeight: 3`), indicando que para ele ceder aquela figurinha, ele espera receber o equivalente a 3 figurinhas normais em troca.
+
+## Impacto no Match Engine
+
+No frontend, durante o processo de visualização de um Match, os pesos de troca são levados em consideração para sugerir se uma proposta é justa.
+
+Se o `visitorCanGive` contiver 1 figurinha com peso `3`, o sistema alertará que o `targetCanGive` deveria idealmente ceder 3 figurinhas normais (`peso 1`) para que o "saldo de troca" seja igual a zero.
