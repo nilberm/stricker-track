@@ -2,6 +2,7 @@
   "title": "Architecture",
   "pages": [
     "index",
-    "infrastructure"
+    "infrastructure",
+    "ui-and-theming"
   ]
 }

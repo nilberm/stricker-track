@@ -1,0 +1,45 @@
+---
+title: UI e Temas
+description: Padrões de interface, restrições de responsividade e o sistema de temas dinâmicos.
+---
+
+# Arquitetura de UI e Temas
+
+A interface do front-end (`apps/web`) é construída com base em regras rígidas de responsividade e um sistema de injeção dinâmica de temas, permitindo que coleções específicas possuam um design customizado.
+
+## Responsividade Mobile & Limites de Contêiner
+
+Para garantir que os layouts não quebrem ou gerem vazamento horizontal (overflow) em telas muito pequenas (ex: 320px), nós forçamos os seguintes padrões estruturais:
+
+1. **Restrições de Coluna no CSS Grid**:
+   Sempre que `display: grid` é utilizado sem um `grid-cols-X` explícito, o navegador adota o tamanho `auto` para a coluna. Isso impede que os elementos filhos encolham menos do que a largura do seu próprio conteúdo.
+   - **Padrão**: Sempre defina explicitamente `grid-cols-1` para grids no mobile (`<div className="grid grid-cols-1 gap-4 md:grid-cols-2">`). Isso aplica `minmax(0, 1fr)`, permitindo que o contêiner encolha e que as regras de `truncate` funcionem.
+
+2. **Truncamento de Texto em Elementos Flex/Grid**:
+   Textos de tradução longos ou chaves ausentes podem esticar itens flexíveis infinitamente.
+   - **Padrão**: Para strings que devem ser cortadas, o item flex pai deve ter `min-w-0` (quebrando o padrão de `min-width: auto`), e o elemento de texto deve usar a classe `truncate`.
+   - **Exemplo**: `<div className="flex-1 min-w-0"><span className="block truncate">Texto Muito Longo...</span></div>`
+
+3. **Quebra de Palavras em Cabeçalhos**:
+   Ao usar `inline-block` para títulos de seções, aplique sempre `max-w-full break-words` para garantir que palavras excessivamente grandes (como uma chave i18n bruta) quebrem de linha de forma natural, sem vazar a borda.
+
+## Categorias de Coleções & Theming
+
+O banco de dados classifica as coleções através do `categoryId` e pode agrupar sob uma `series`. Esses metadados permitem que a UI decida qual tema renderizar.
+
+### Theme Store
+O cliente web utiliza um estado global via Zustand (`src/stores/theme-store.ts`) para gerenciar o tema atual de forma dinâmica:
+
+```typescript
+type ThemeState = {
+  currentTheme: 'default' | 'world-cup';
+  setTheme: (theme: 'default' | 'world-cup') => void;
+};
+```
+
+### Interfaces Customizadas por Coleção
+Em vez de um modelo genérico único, coleções de alto impacto podem sobrescrever os componentes visuais padrão baseando-se no `slug` ou na `categoryId`.
+
+Por exemplo, a coleção **FIFA World Cup 2026** injeta os arquivos `world-cup-section-detail.tsx` e `world-cup-sticker-card.tsx` para apresentar um design exato (com SVGs específicos, cores e proporções), enquanto compartilha as funções centrais do sistema (`handleAdd`, `handleRemove`).
+
+Se uma coleção não possuir um tema mapeado, o sistema adota automaticamente a interface genérica `default-section-detail.tsx`.

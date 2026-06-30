@@ -1,0 +1,45 @@
+---
+title: UI and Theming
+description: UI patterns, responsiveness constraints, and the dynamic theming system.
+---
+
+# UI and Theming Architecture
+
+The front-end interface in `apps/web` is designed around strong responsiveness constraints and a dynamic theme injection system that allows specific collections to have bespoke UI representations.
+
+## Mobile Responsiveness & Container Constraints
+
+To ensure robust layouts that do not break or horizontally overflow on ultra-small screens (e.g., 320px), we enforce the following structural patterns:
+
+1. **CSS Grid Column Constraints**:
+   Whenever `display: grid` is used without explicit `grid-cols-X`, the browser defaults to `auto` track sizing. This prevents children from shrinking below their content's `min-width`, breaking layouts on small devices.
+   - **Pattern**: Always explicitly define `grid-cols-1` on mobile grids (`<div className="grid grid-cols-1 gap-4 md:grid-cols-2">`). This sets the track to `minmax(0, 1fr)`, allowing the container to shrink and enabling truncation.
+
+2. **Text Truncation on Flex/Grid Children**:
+   Long translations or missing keys can stretch flex items indefinitely.
+   - **Pattern**: For strings that must be truncated, the parent flex item must have `min-w-0` to break the `min-width: auto` default, and the text element must have `truncate`.
+   - **Example**: `<div className="flex-1 min-w-0"><span className="block truncate">Long Text...</span></div>`
+
+3. **Word Breaking on Headers**:
+   When using `inline-block` for headers (like section titles), apply `max-w-full break-words` to ensure that long strings (like missing i18n keys) wrap naturally instead of overflowing the container.
+
+## Collection Categories & Theming
+
+The database schema categorizes collections (`categoryId`) and assigns specific identifiers (`series`). This metadata allows the UI to render bespoke themes.
+
+### Theme Store
+The client utilizes a global Zustand store (`src/stores/theme-store.ts`) to manage the current theme dynamically:
+
+```typescript
+type ThemeState = {
+  currentTheme: 'default' | 'world-cup';
+  setTheme: (theme: 'default' | 'world-cup') => void;
+};
+```
+
+### Bespoke Collection UIs
+Instead of a one-size-fits-all approach, collections can override default visual components based on their `slug` or `categoryId`.
+
+For example, the **FIFA World Cup 2026** collection uses a custom `world-cup-section-detail.tsx` and `world-cup-sticker-card.tsx` to inject distinct visuals (specific SVG backgrounds, colors, and aspect ratios) while preserving the core interactions (`handleAdd`, `handleRemove`).
+
+If a collection does not have a mapped theme, it falls back to the generic `default-section-detail.tsx` interface.

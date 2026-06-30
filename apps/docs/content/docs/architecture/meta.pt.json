@@ -1,6 +1,8 @@
 {
   "title": "Arquitetura",
   "pages": [
-    "index"
+    "index",
+    "infrastructure",
+    "ui-and-theming"
   ]
 }
